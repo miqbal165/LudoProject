@@ -58,15 +58,29 @@ public class Board : IBoard
             var start = GetStartPosition(color);
             _cells[start.Row, start.Column] = new Cell(start, CellType.Start, color);
         }
-
-
-        var protectedPosition = new[]
+        
+        var protectedPositions = new[]
         {
             new Position(2, 6),
             new Position(6, 12),
             new Position(12, 8),
-            new Position(8, 2),
+            new Position(8, 2)
         };
+
+        foreach (var position in protectedPositions)
+            _cells[position.Row, position.Column] = new Cell(position, CellType.Protected, null);
+
+        // 
+        foreach (var color in Enum.GetValues<Color>())
+        {
+            foreach (var position in GetHomeColumnPositions(color))
+                _cells[position.Row, position.Column] = new Cell(position, CellType.HomeColumn, color);
+        }
+
+        var center = GetCenterPosition();
+        _cells[center.Row, center.Column] = new Cell(center, CellType.Center, null);
+
+        BuildAllPaths();
     }
     
     public ICell GetCell(Position position)
