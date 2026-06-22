@@ -6,7 +6,7 @@ namespace LudoProjects.Models;
 public class Board : IBoard
 {
     private readonly Cell[,] _cells;
-    private readonly Dictionary<Color, IReadOnlyList<Position>> _pathCache;
+    private readonly Dictionary<Color, IReadOnlyList<Position>> _pathCache = new();
 
     public Board()
     {
@@ -58,7 +58,15 @@ public class Board : IBoard
             var start = GetStartPosition(color);
             _cells[start.Row, start.Column] = new Cell(start, CellType.Start, color);
         }
-        
+
+
+        var protectedPosition = new[]
+        {
+            new Position(2, 6),
+            new Position(6, 12),
+            new Position(12, 8),
+            new Position(8, 2),
+        };
     }
     
     public ICell GetCell(Position position)
