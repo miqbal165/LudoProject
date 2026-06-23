@@ -105,15 +105,6 @@ public static partial class LudoUi
         };
     }
     
-    private static string GetColorName(Color color) => color switch
-    {
-        Color.Red => "Red",
-        Color.Blue => "Blue",
-        Color.Green => "Green",
-        Color.Yellow => "Yellow",
-        _ => color.ToString()
-    };
-    
     public static void DrawGameState(GameState state)
     {
         Console.WriteLine();
