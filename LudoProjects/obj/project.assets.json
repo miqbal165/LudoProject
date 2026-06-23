@@ -8,19 +8,19 @@
     "net8.0": []
   },
   "packageFolders": {
-    "C:\\Users\\miqba\\.nuget\\packages\\": {}
+    "C:\\Users\\Iqbal\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\miqba\\RiderProjects\\LudoProject\\LudoProjects\\LudoProjects.csproj",
+      "projectUniqueName": "C:\\Users\\Iqbal\\RiderProjects\\LudoProject\\LudoProjects\\LudoProjects.csproj",
       "projectName": "LudoProjects",
-      "projectPath": "C:\\Users\\miqba\\RiderProjects\\LudoProject\\LudoProjects\\LudoProjects.csproj",
-      "packagesPath": "C:\\Users\\miqba\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\miqba\\RiderProjects\\LudoProject\\LudoProjects\\obj\\",
+      "projectPath": "C:\\Users\\Iqbal\\RiderProjects\\LudoProject\\LudoProjects\\LudoProjects.csproj",
+      "packagesPath": "C:\\Users\\Iqbal\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Iqbal\\RiderProjects\\LudoProject\\LudoProjects\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\miqba\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\Iqbal\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -43,8 +43,7 @@
         "enableAudit": "true",
         "auditLevel": "low",
         "auditMode": "direct"
-      },
-      "SdkAnalysisLevel": "10.0.300"
+      }
     },
     "frameworks": {
       "net8.0": {
@@ -65,7 +64,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Users\\miqba\\.dotnet\\sdk\\10.0.300/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.421/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

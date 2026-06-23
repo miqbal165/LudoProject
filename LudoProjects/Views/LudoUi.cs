@@ -4,7 +4,7 @@ using LudoProjects.Models;
 
 namespace LudoProjects.Views;
 
-public static class LudoUi
+public static partial class LudoUi
 {
     public static void ShowTitle()
     {
@@ -27,7 +27,7 @@ public static class LudoUi
                 var cell = board.GetCell(new Position(row, column));
                 var token = GetCellToken(cell);
                 var consoleColor = GetCellConsoleColor(cell);
-
+                
                 Console.Write("[");
                 var originalColor = Console.ForegroundColor;
                 Console.ForegroundColor = consoleColor;
@@ -46,6 +46,7 @@ public static class LudoUi
 
     private static string GetCellToken(ICell cell)
     {
+        
         if (cell.OccupyingPawns.Count > 0)
         {
             var groups = cell.OccupyingPawns.GroupBy(pawn => pawn.Color).ToList();
@@ -65,14 +66,14 @@ public static class LudoUi
             var mixedLetters = string.Concat(groups.Select(group => GetColorLetter(group.Key)));
             return mixedLetters.Length <= 3 ? mixedLetters : "MIX";
         }
-
+        
         return cell.Type switch
         {
             CellType.Start => $"S{GetColorLetter(cell.Color)}",
             CellType.Protected => " * ",
             CellType.HomeColumn => $"H{GetColorLetter(cell.Color)}",
             CellType.Center => " C ",
-            CellType.Base => " # ",
+            CellType.Base => " + ",
             _ => "  "
         };
     }
@@ -157,7 +158,7 @@ public static class LudoUi
         }
         catch (IOException)
         {
-            // Console yang tidak mendukung Clear tetap dapat menjalankan game.
+            // Consoles that don't support Clear can still run the game.
         }
     }
     

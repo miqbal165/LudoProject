@@ -13,7 +13,7 @@ public sealed class Pawn : IPawn
     public Pawn(int id, Color color)
     {
         if (id < 0 || id > 3)
-            throw new ArgumentOutOfRangeException(nameof(id), "Id pion harus 0 sampai 3.");
+            throw new ArgumentOutOfRangeException(nameof(id), "Pawn ID must be 0 to 3.");
 
         Id = id;
         Color = color;

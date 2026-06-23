@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using LudoProjects.Controllers;
 using LudoProjects.Enums;
 using LudoProjects.Interfaces;
 using LudoProjects.Models;
@@ -11,9 +12,11 @@ internal abstract class Program
     public static void Main()
     {
         // Testing UI
+        
         IBoard board = new Board();
         List<IPlayer> listPlayers = new();
         List<IPawn> movablePawns = new();
+        IDice dice = new Dice();
 
         IPlayer firstPlayer = new Player("Budi", Color.Red);
         IPlayer secondPlayer = new Player("Iqbal", Color.Green);
@@ -58,19 +61,12 @@ internal abstract class Program
         listPlayers.Add(firstPlayer);
         listPlayers.Add(secondPlayer);
         
-        GameState state = new GameState(
-            TurnPhase.Rolling,
-            listPlayers[0],
-            listPlayers,
-            playersPawns,
-            3,
-            true,
-            movablePawns,
-            null
-        );
+
+        GameController controller = new GameController(listPlayers, board, dice, new Random());
         
         LudoUi.ShowTitle();
         LudoUi.DrawBoard(board);
-        LudoUi.DrawGameState(state);
+        LudoUi.DrawGameState(controller.GetGameState());
+        
     }
 }
