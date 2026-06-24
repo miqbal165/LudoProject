@@ -253,7 +253,26 @@ public class GameController
 
     private bool IsValidMove(IPawn pawn, int steps)
     {
-        throw new ArgumentException();
+        if (steps is < 1 or > 6 || pawn.Status == PawnStatus.Finished)
+        {
+            return false;
+        }
+
+        if (pawn.Status == PawnStatus.InBase)
+        {
+            if (steps != 6)
+            {
+                return false;
+            }
+            
+            return !IsPathBlocked(_board.GetStartPosition(pawn.Color), pawn.Color);
+        }
+
+        var path = _board.GetFullPath(pawn.Color);
+        
+        // lanjutkan kembali nanti
+        
+        return false;
     }
 
     private bool IsPathBlocked(Position targetPosition, Color color)
