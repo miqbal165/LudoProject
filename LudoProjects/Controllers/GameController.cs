@@ -68,17 +68,106 @@ public class GameController
 
     public void StartGame()
     {
-        
+        if (_currentPhase != TurnPhase.WaitingToStart)
+        {
+            return;
+        }
+
+        _currentPlayerIndex = 0;
+        _extraRollPending = false;
+        _consecutiveSixes = 0;
+        _dice.CurrentValue = 0;
+        _currentPhase = TurnPhase.Rolling;
+        BroadcastState();
     }
 
     public void RollDice()
     {
+        if (!CanRoll())
+        {
+            return;
+        }
+
+        int rolledValue = PerformRoll();
+        _consecutiveSixes = rolledValue == 6 ? _consecutiveSixes + 1 : 0;
+
+        if (_consecutiveSixes == 3)
+        {
+            _extraRollPending = false;
+            NextTurn();
+            BroadcastState();
+            return;
+        }
+
+        _extraRollPending = rolledValue == 6;
+        _currentPhase = TurnPhase.SelectingPawn;
         
+        var movablePawns = GetMovablePawns();
+        
+        if (movablePawns.Count == 0)
+        {
+            if (_extraRollPending)
+                _currentPhase = TurnPhase.Rolling;
+            else
+                NextTurn();
+        }
+        else
+        {
+            var currentPawns = _playerPawns[GetCurrentPlayer()];
+            var allPawnsInBase = currentPawns.All(pawn => pawn.Status == PawnStatus.InBase);
+
+            // If all the pawns are still on the base and a 6 is scored,
+            // the first pawn is automatically played. If only one pawn is valid,
+            // it is automatically played.
+            if (allPawnsInBase || movablePawns.Count == 1)
+            {
+                var automaticPawn = movablePawns.OrderBy(pawn => pawn.Id).First();
+                MovePawnAlongPath(automaticPawn, rolledValue);
+                CheckWinCondition();
+
+                if (_currentPhase != TurnPhase.GameOver)
+                {
+                    if (_extraRollPending)
+                        _currentPhase = TurnPhase.Rolling;
+                    else
+                        NextTurn();
+                }
+            }
+        }
+
+        BroadcastState();
     }
 
     public void SelectPawn(int pawnId)
     {
+        if (_currentPhase != TurnPhase.SelectingPawn)
+        {
+            return;
+        }
+
+        var selectedPawn = GetMovablePawns().FirstOrDefault(pawn => pawn.Id == pawnId);
+
+        if (selectedPawn is null)
+        {
+            return;
+        }
         
+        MovePawnAlongPath(selectedPawn, _dice.CurrentValue);
+        CheckWinCondition();
+
+        if (_currentPhase != TurnPhase.GameOver)
+        {
+            if (_extraRollPending)
+            {
+                _currentPhase = TurnPhase.Rolling;
+            }
+            else
+            {
+                NextTurn();
+            }
+        }
+        
+        BroadcastState();
     }
 
     public IPlayer GetCurrentPlayer()
@@ -88,7 +177,15 @@ public class GameController
 
     public IReadOnlyList<IPawn> GetMovablePawns()
     {
-        return null;
+        if (_currentPhase != TurnPhase.SelectingPawn || _dice.CurrentValue is < 1 or > 6)
+        {
+            return Array.Empty<IPawn>();
+        }
+        
+        return _playerPawns[GetCurrentPlayer()]
+            .Where(pawn => IsValidMove(pawn, _dice.CurrentValue))
+            .ToList()
+            .AsReadOnly();
     }
 
     public GameState GetGameState()
@@ -131,8 +228,6 @@ public class GameController
         {
             _currentPlayerIndex = (_currentPlayerIndex + 1) % _players.Count;
         } while (_players[_currentPlayerIndex].IsFinished);
-        
-        
         
     }
 
@@ -178,7 +273,7 @@ public class GameController
         return value;
     }
 
-    public void BroadcastState()
+    private void BroadcastState()
     {
         OnStateChange?.Invoke(GetGameState());
     }

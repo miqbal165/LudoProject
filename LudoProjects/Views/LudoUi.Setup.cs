@@ -47,11 +47,14 @@ public static partial class LudoUi
             }
             
             var selectedColorIndex = ReadNumber("Choose: ", 1, availableColors.Count) - 1;
+            
             var selectedColor = availableColors[selectedColorIndex];
+            
             availableColors.RemoveAt(selectedColorIndex);
             players.Add(new Player(name, selectedColor));
         }
         Console.WriteLine();
+        
         Console.WriteLine("List Players:");
         foreach (var player in players)
             Console.WriteLine($"- {player.Name} ({GetColorName(player.Color)})");
@@ -67,7 +70,7 @@ public static partial class LudoUi
         while (true)
         {
             Console.Write(prompt);
-            if (int.TryParse(Console.ReadLine(), out var value) && value >= min && value <= max)
+            if (int.TryParse(Console.ReadLine(), out int value) && value >= min && value <= max)
             {
                 return value;
             }

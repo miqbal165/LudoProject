@@ -6,7 +6,7 @@ namespace LudoProjects.Views;
 
 public static partial class LudoUi
 {
-    private static void RunGame(GameController controller, IBoard board)
+    public static void RunGame(GameController controller, IBoard board)
     {
         string message = "Let's start this game.";
         controller.StartGame();
@@ -68,30 +68,32 @@ public static partial class LudoUi
                 if (automaticallyMovedPawn is not null)
                 {
                     var captureText = automaticallyCaptured.Count > 0
-                        ? $" dan menendang {string.Join(", ", automaticallyCaptured)} ke base"
+                        ? $" and kicks {string.Join(", ", automaticallyCaptured)} to base"
                         : string.Empty;
+                    
                     var extraText = ReferenceEquals(playerBeforeRoll, afterRoll.CurrentPlayer)
                                     && afterRoll.Phase == TurnPhase.Rolling
-                        ? " Pemain mendapat roll tambahan."
+                        ? " The player gets an additional roll."
                         : string.Empty;
-                    message = $"Hasil dadu {afterRoll.LastDiceValue}. {GetPawnLabel(automaticallyMovedPawn)} " +
-                              $"otomatis dimainkan{captureText}.{extraText}";
+                    
+                    message = $"Dice results {afterRoll.LastDiceValue}. {GetPawnLabel(automaticallyMovedPawn)} " +
+                              $"automatically played{captureText}.{extraText}";
                 }
                 else if (!ReferenceEquals(playerBeforeRoll, afterRoll.CurrentPlayer) && afterRoll.LastDiceValue == 6)
                 {
-                    message = $"{playerBeforeRoll.Name} mendapat angka 6 tiga kali berturut-turut. Giliran hangus.";
+                    message = $"{playerBeforeRoll.Name} got the number 6 three times in a row. Forfeit turn.";
                 }
                 else if (afterRoll.Phase == TurnPhase.SelectingPawn)
                 {
-                    message = $"Hasil dadu {playerBeforeRoll.Name}: {afterRoll.LastDiceValue}. Pilih pion yang akan dimainkan.";
+                    message = $"Dice results {playerBeforeRoll.Name}: {afterRoll.LastDiceValue}. Select the pawn to play.";
                 }
                 else if (ReferenceEquals(playerBeforeRoll, afterRoll.CurrentPlayer) && afterRoll.LastDiceValue == 6)
                 {
-                    message = "Hasil dadu 6, tetapi tidak ada langkah valid. Pemain memperoleh roll tambahan.";
+                    message = "The dice roll is 6, but there is no valid move. The player gets an extra roll.";
                 }
                 else
                 {
-                    message = $"Hasil dadu {afterRoll.LastDiceValue}. Tidak ada pion yang dapat bergerak; giliran berpindah.";
+                    message = $"Dice results {afterRoll.LastDiceValue}. No pawns may move; turn passes.";
                 }
 
                 continue;
@@ -100,8 +102,8 @@ public static partial class LudoUi
             if (state.Phase == TurnPhase.SelectingPawn)
             {
                 Console.WriteLine();
-                Console.WriteLine($"Hasil dadu: {state.LastDiceValue}");
-                Console.WriteLine("Pion yang dapat dimainkan:");
+                Console.WriteLine($"Dice results: {state.LastDiceValue}");
+                Console.WriteLine("Playable pawns:");
 
                 foreach (var pawn in state.MovablePawns.OrderBy(pawn => pawn.Id))
                     Console.WriteLine($"  {pawn.Id + 1}. {DescribeMove(board, pawn, state.LastDiceValue)}");
@@ -109,7 +111,7 @@ public static partial class LudoUi
                 int selectedPawnId;
                 while (true)
                 {
-                    Console.Write("Pilih nomor pion: ");
+                    Console.Write("Select pawn number: ");
                     if (int.TryParse(Console.ReadLine(), out var selectedNumber))
                     {
                         selectedPawnId = selectedNumber - 1;
@@ -117,12 +119,14 @@ public static partial class LudoUi
                             break;
                     }
 
-                    Console.WriteLine("Pion tersebut tidak dapat dipilih.");
+                    Console.WriteLine("The pawn cannot be selected.");
                 }
 
                 var beforeMove = state.PlayerPawns
                     .SelectMany(pair => pair.Value)
                     .ToDictionary(pawn => pawn, pawn => (pawn.Status, pawn.StepIndex));
+                
+                
                 var selectedPawn = state.MovablePawns.Single(pawn => pawn.Id == selectedPawnId);
                 var selectedLabel = GetPawnLabel(selectedPawn);
                 var moveDescription = DescribeMove(board, selectedPawn, state.LastDiceValue);
@@ -139,7 +143,7 @@ public static partial class LudoUi
                     .ToList();
 
                 message = captured.Count > 0
-                    ? $"{moveDescription}; {selectedLabel} menendang {string.Join(", ", captured)} kembali ke base."
+                    ? $"{moveDescription}; {selectedLabel} kick {string.Join(", ", captured)} return to base."
                     : $"{moveDescription}.";
             }
         }
@@ -148,18 +152,18 @@ public static partial class LudoUi
     private static string DescribeMove(IBoard board, IPawn pawn, int diceValue)
     {
         if (pawn.Status == PawnStatus.InBase)
-            return $"{GetPawnLabel(pawn)} keluar dari BASE ke START";
+            return $"{GetPawnLabel(pawn)} exit from BASE to START";
 
         var path = board.GetFullPath(pawn.Color);
         var targetIndex = pawn.StepIndex + diceValue;
         var target = path[targetIndex];
 
         if (targetIndex == path.Count - 1)
-            return $"{GetPawnLabel(pawn)} maju {diceValue} langkah ke CENTER/FINISH";
+            return $"{GetPawnLabel(pawn)} forward {diceValue} steps to CENTER/FINISH";
 
         if (targetIndex >= 52)
-            return $"{GetPawnLabel(pawn)} maju {diceValue} langkah ke HOME COLUMN ({target.Row},{target.Column})";
+            return $"{GetPawnLabel(pawn)} forward {diceValue} steps to the Main Column ({target.Row},{target.Column})";
 
-        return $"{GetPawnLabel(pawn)} maju {diceValue} langkah ke cell ({target.Row},{target.Column})";
+        return $"{GetPawnLabel(pawn)} forward {diceValue} step into the cell ({target.Row},{target.Column})";
     }
 }

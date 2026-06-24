@@ -73,7 +73,7 @@ public static partial class LudoUi
             CellType.Protected => " * ",
             CellType.HomeColumn => $"H{GetColorLetter(cell.Color)}",
             CellType.Center => " C ",
-            CellType.Base => " + ",
+            CellType.Base => "<^>",
             _ => "  "
         };
     }
