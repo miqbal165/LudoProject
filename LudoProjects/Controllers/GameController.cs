@@ -128,9 +128,13 @@ public class GameController
                 if (_currentPhase != TurnPhase.GameOver)
                 {
                     if (_extraRollPending)
+                    {
                         _currentPhase = TurnPhase.Rolling;
+                    }
                     else
+                    {
                         NextTurn();
+                    }
                 }
             }
         }
@@ -243,7 +247,12 @@ public class GameController
 
     private Position GetCurrentPosition(IPawn pawn)
     {
-        throw new ArgumentException();
+        return pawn.Status switch
+        {
+            PawnStatus.InBase => _board.GetBasePositions(pawn.Color)[pawn.Id],
+            PawnStatus.Finished => _board.GetCenterPosition(),
+            _ => _board.GetFullPath(pawn.Color)[pawn.StepIndex]
+        };
     }
 
     private void CheckAndHandleCapture(ICell cell, Color attackerColor)
@@ -269,10 +278,28 @@ public class GameController
         }
 
         var path = _board.GetFullPath(pawn.Color);
-        
-        // lanjutkan kembali nanti
-        
-        return false;
+        var finishIndex = path.Count - 1;
+        var targetIndex = pawn.StepIndex + steps;
+
+        // Aturan HomeColumn: pion boleh bergerak jika hasil dadu masih mencapai
+        // cell sebelum finish atau tepat mencapai finish. Jika melewati finish,
+        // langkah tidak valid dan pion tetap diam.
+        if (targetIndex > finishIndex)
+        {
+            return false;
+        }
+
+        // Setiap cell yang dilewati diperiksa agar pion tidak dapat melompati
+        // block tiga atau lebih pion sewarna milik lawan.
+        for (var index = pawn.StepIndex + 1; index <= targetIndex; index++)
+        {
+            if (IsPathBlocked(path[index], pawn.Color))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private bool IsPathBlocked(Position targetPosition, Color color)
@@ -282,7 +309,47 @@ public class GameController
 
     private void MovePawnAlongPath(IPawn pawn, int steps)
     {
-        
+        var oldPosition = GetCurrentPosition(pawn);
+        if (_board.GetCell(oldPosition) is Cell oldCell)
+        {
+            oldCell.RemovePawn(pawn);
+        }
+
+        if (pawn.Status == PawnStatus.InBase)
+        {
+            // Angka 6 mengeluarkan pion ke start, bukan maju enam cell.
+            pawn.StepIndex = 0;
+            pawn.Status = PawnStatus.OnBoard;
+        }
+        else
+        {
+            pawn.StepIndex += steps;
+            var path = _board.GetFullPath(pawn.Color);
+            var finishIndex = path.Count - 1;
+            var homeColumnStartIndex = 52;
+
+            if (pawn.StepIndex == finishIndex)
+            {
+                pawn.Status = PawnStatus.Finished;
+            }
+            else if (pawn.StepIndex >= homeColumnStartIndex)
+            {
+                pawn.Status = PawnStatus.InHomeColumn;
+            }
+            else
+            {
+                pawn.Status = PawnStatus.OnBoard;
+            }
+        }
+
+        var targetPosition = GetCurrentPosition(pawn);
+        var targetCell = _board.GetCell(targetPosition);
+        CheckAndHandleCapture(targetCell, pawn.Color);
+
+        if (targetCell is Cell mutableTargetCell)
+        {
+            mutableTargetCell.AddPawn(pawn);
+        }
     }
 
     private int PerformRoll()
