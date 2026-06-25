@@ -339,7 +339,15 @@ public class GameController
 
     private bool IsPathBlocked(Position targetPosition, Color color)
     {
-        return false;
+        var cell = _board.GetCell(targetPosition);
+        
+        if (cell.Type is CellType.Base or CellType.HomeColumn or CellType.Center)
+            return false;
+
+        return cell.OccupyingPawns
+            .Where(pawn => pawn.Color != color)
+            .GroupBy(pawn => pawn.Color)
+            .Any(group => group.Count() >= 2);
     }
 
     private void MovePawnAlongPath(IPawn pawn, int steps)

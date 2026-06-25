@@ -1,6 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using LudoProjects.Controllers;
-using LudoProjects.Enums;
+﻿using LudoProjects.Controllers;
 using LudoProjects.Interfaces;
 using LudoProjects.Models;
 using LudoProjects.Views;
@@ -11,13 +9,12 @@ internal abstract class Program
 {
     public static void Main()
     {
-        // Testing UI
-        
+        LudoUi.ShowTitle();
+        List<IPlayer> players = LudoUi.CreatePlayers();
         IBoard board = new Board();
         IDice dice = new Dice();
-        
-        var listPlayers = LudoUi.CreatePlayers();
-        GameController controller = new (listPlayers, board, dice, new Random());
+        var controller = new GameController(players, board, dice, new Random());
+
         LudoUi.RunGame(controller, board);
     }
 }
