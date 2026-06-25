@@ -5,7 +5,7 @@ namespace LudoProjects.Models;
 
 public sealed class Cell : ICell
 {
-    private readonly List<IPawn> _occupyingPawns = new();
+    private readonly List<IPawn> _occupyingPawns = [];
 
     public Position Position { get; }
     public CellType Type { get; }

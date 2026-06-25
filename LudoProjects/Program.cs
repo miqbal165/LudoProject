@@ -18,10 +18,6 @@ internal abstract class Program
         
         var listPlayers = LudoUi.CreatePlayers();
         GameController controller = new (listPlayers, board, dice, new Random());
-        
-        LudoUi.ShowTitle();
-        LudoUi.DrawBoard(board);
-        LudoUi.DrawGameState(controller.GetGameState());
         LudoUi.RunGame(controller, board);
     }
 }

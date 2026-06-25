@@ -237,12 +237,24 @@ public class GameController
 
     private void CheckWinCondition()
     {
-        
+        // TODO: Logic untuk menentukan pemenangnya
     }
 
     private void HandleCapture(IPawn target)
     {
-        
+        Position oldPosition = GetCurrentPosition(target);
+        if (_board.GetCell(oldPosition) is Cell oldCell)
+        {
+            oldCell.RemovePawn(target);
+        }
+
+        target.Status = PawnStatus.InBase;
+        target.StepIndex = -1;
+        Position basePosition = _board.GetBasePositions(target.Color)[target.Id];
+        if (_board.GetCell(basePosition) is Cell baseCell)
+        {
+            baseCell.AddPawn(target);
+        }
     }
 
     private Position GetCurrentPosition(IPawn pawn)
@@ -257,43 +269,66 @@ public class GameController
 
     private void CheckAndHandleCapture(ICell cell, Color attackerColor)
     {
+        if (cell.Type is CellType.Start or CellType.Protected 
+            or CellType.HomeColumn or CellType.Base or CellType.Center)
+        {
+            return;
+        }
         
+        List<IPawn> capturedPawns = cell.OccupyingPawns
+            .Where(pawn => pawn.Color != attackerColor)
+            .ToList();
+
+        foreach (var capturedPawn in capturedPawns)
+        {
+            HandleCapture(capturedPawn);
+        }
     }
 
     private bool IsValidMove(IPawn pawn, int steps)
     {
-        if (steps is < 1 or > 6 || pawn.Status == PawnStatus.Finished)
+        if (steps is < 1 or > 6)
         {
             return false;
         }
 
+        if (pawn.Status == PawnStatus.Finished)
+        {
+            return false;
+        }
+
+        var path = _board.GetFullPath(pawn.Color);
+
+        // Pion yang masih di base hanya dapat keluar dengan angka 6.
         if (pawn.Status == PawnStatus.InBase)
         {
             if (steps != 6)
             {
                 return false;
             }
-            
-            return !IsPathBlocked(_board.GetStartPosition(pawn.Color), pawn.Color);
+
+            var startPosition = path[0];
+
+            // Tidak boleh keluar jika start diblokade lawan.
+            return !IsPathBlocked(startPosition, pawn.Color);
         }
 
-        var path = _board.GetFullPath(pawn.Color);
-        var finishIndex = path.Count - 1;
         var targetIndex = pawn.StepIndex + steps;
 
-        // Aturan HomeColumn: pion boleh bergerak jika hasil dadu masih mencapai
-        // cell sebelum finish atau tepat mencapai finish. Jika melewati finish,
-        // langkah tidak valid dan pion tetap diam.
-        if (targetIndex > finishIndex)
+        // Pion tidak boleh bergerak melewati finish.
+        if (targetIndex >= path.Count)
         {
             return false;
         }
 
-        // Setiap cell yang dilewati diperiksa agar pion tidak dapat melompati
-        // block tiga atau lebih pion sewarna milik lawan.
-        for (var index = pawn.StepIndex + 1; index <= targetIndex; index++)
+        // Periksa setiap cell yang dilewati agar tidak melompati blockade.
+        for (var index = pawn.StepIndex + 1;
+             index <= targetIndex;
+             index++)
         {
-            if (IsPathBlocked(path[index], pawn.Color))
+            var position = path[index];
+
+            if (IsPathBlocked(position, pawn.Color))
             {
                 return false;
             }
@@ -309,41 +344,55 @@ public class GameController
 
     private void MovePawnAlongPath(IPawn pawn, int steps)
     {
+        var path = _board.GetFullPath(pawn.Color);
+
+        // Tentukan index tujuan sebelum menghapus pion dari cell lama.
+        var targetIndex = pawn.Status == PawnStatus.InBase
+            ? 0
+            : pawn.StepIndex + steps;
+
+        // A safety measure to prevent the pawn from passing the finish.
+        if (targetIndex < 0 || targetIndex >= path.Count)
+        {
+            return;
+        }
+
         var oldPosition = GetCurrentPosition(pawn);
+
         if (_board.GetCell(oldPosition) is Cell oldCell)
         {
             oldCell.RemovePawn(pawn);
         }
 
-        if (pawn.Status == PawnStatus.InBase)
+        // Perbarui index pion.
+        pawn.StepIndex = targetIndex;
+
+        // Hitung batas Home Column secara dinamis.
+        var finishIndex = path.Count - 1;
+
+        var homeColumnCount =
+            _board.GetHomeColumnPositions(pawn.Color).Count;
+
+        var homeColumnStartIndex =
+            finishIndex - homeColumnCount;
+
+        // Perbarui status pion berdasarkan posisinya di path.
+        if (pawn.StepIndex == finishIndex)
         {
-            // Angka 6 mengeluarkan pion ke start, bukan maju enam cell.
-            pawn.StepIndex = 0;
-            pawn.Status = PawnStatus.OnBoard;
+            pawn.Status = PawnStatus.Finished;
+        }
+        else if (pawn.StepIndex >= homeColumnStartIndex)
+        {
+            pawn.Status = PawnStatus.InHomeColumn;
         }
         else
         {
-            pawn.StepIndex += steps;
-            var path = _board.GetFullPath(pawn.Color);
-            var finishIndex = path.Count - 1;
-            var homeColumnStartIndex = 52;
-
-            if (pawn.StepIndex == finishIndex)
-            {
-                pawn.Status = PawnStatus.Finished;
-            }
-            else if (pawn.StepIndex >= homeColumnStartIndex)
-            {
-                pawn.Status = PawnStatus.InHomeColumn;
-            }
-            else
-            {
-                pawn.Status = PawnStatus.OnBoard;
-            }
+            pawn.Status = PawnStatus.OnBoard;
         }
 
-        var targetPosition = GetCurrentPosition(pawn);
+        var targetPosition = path[pawn.StepIndex];
         var targetCell = _board.GetCell(targetPosition);
+
         CheckAndHandleCapture(targetCell, pawn.Color);
 
         if (targetCell is Cell mutableTargetCell)

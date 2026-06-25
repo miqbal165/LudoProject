@@ -95,7 +95,7 @@ public class Board : IBoard
 
     public IReadOnlyList<ICell> GetCellsByType(CellType type)
     {
-        List<ICell> result = new();
+        List<ICell> result = [];
         foreach (var cell in _cells)
         {
             if (cell.Type == type)
@@ -239,6 +239,8 @@ public class Board : IBoard
     private IReadOnlyList<Position> BuildPathForColor(Color color)
     {
         var path = GetClockwiseOuterTrack(GetStartPosition(color)).ToList();
+        
+        path.RemoveAt(path.Count - 1);
         
         path.AddRange(GetHomeColumnPositions(color));
         path.Add(GetCenterPosition());
