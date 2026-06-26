@@ -15,6 +15,8 @@ internal abstract class Program
         IDice dice = new Dice();
         var controller = new GameController(players, board, dice, new Random());
 
+        controller.OnPlayerWon += LudoUi.ShowWinner;
+
         LudoUi.RunGame(controller, board);
     }
 }

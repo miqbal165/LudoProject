@@ -1,6 +1,7 @@
 using LudoProjects.Controllers;
 using LudoProjects.Enums;
 using LudoProjects.Interfaces;
+using LudoProjects.Models;
 
 namespace LudoProjects.Views;
 
@@ -28,14 +29,6 @@ public static partial class LudoUi
 
             if (state.Phase == TurnPhase.GameOver)
             {
-                Console.WriteLine();
-                Console.WriteLine("========================================");
-                Console.WriteLine($"The Winner: {state.Winner?.Name.ToUpper()} " +
-                                  $"({GetColorName(state.Winner!.Color)})");
-                Console.WriteLine("All player's pawns have reached the CENTER.");
-                Console.WriteLine("========================================");
-                Console.WriteLine("Press ENTER to exit...");
-                Console.ReadLine();
                 return;
             }
 
@@ -165,5 +158,17 @@ public static partial class LudoUi
             return $"{GetPawnLabel(pawn)} forward {diceValue} steps to the Main Column ({target.Row},{target.Column})";
 
         return $"{GetPawnLabel(pawn)} forward {diceValue} step into the cell ({target.Row},{target.Column})";
+    }
+
+    public static void ShowWinner(IPlayer player)
+    {
+        Console.WriteLine();
+        Console.WriteLine("========================================");
+        Console.WriteLine($"The Winner: {player.Name.ToUpper()} " +
+                          $"({GetColorName(player.Color)})");
+        Console.WriteLine("All player's pawns have reached the CENTER.");
+        Console.WriteLine("========================================");
+        Console.WriteLine("Press ENTER to exit...");
+        Console.ReadLine();
     }
 }

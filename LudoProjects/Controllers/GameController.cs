@@ -46,10 +46,10 @@ public class GameController
         _consecutiveSixes = 0;
         _currentPhase = TurnPhase.WaitingToStart;
 
-        foreach (var player in _players)
+        foreach (IPlayer player in _players)
         {
-            var pawns = new List<IPawn>();
-            var basePositions = _board.GetBasePositions(player.Color);
+            List<IPawn> pawns = [];
+            IReadOnlyList<Position> basePositions = _board.GetBasePositions(player.Color);
 
             for (int pawnId = 0; pawnId < 4; pawnId++)
             {
@@ -102,7 +102,7 @@ public class GameController
         _extraRollPending = rolledValue == 6;
         _currentPhase = TurnPhase.SelectingPawn;
         
-        var movablePawns = GetMovablePawns();
+        IReadOnlyList<IPawn> movablePawns = GetMovablePawns();
         
         if (movablePawns.Count == 0)
         {
@@ -113,15 +113,15 @@ public class GameController
         }
         else
         {
-            var currentPawns = _playerPawns[GetCurrentPlayer()];
-            var allPawnsInBase = currentPawns.All(pawn => pawn.Status == PawnStatus.InBase);
+            List<IPawn> currentPawns = _playerPawns[GetCurrentPlayer()];
+            bool allPawnsInBase = currentPawns.All(pawn => pawn.Status == PawnStatus.InBase);
 
             // If all the pawns are still on the base and a 6 is scored,
             // the first pawn is automatically played. If only one pawn is valid,
             // it is automatically played.
             if (allPawnsInBase || movablePawns.Count == 1)
             {
-                var automaticPawn = movablePawns.OrderBy(pawn => pawn.Id).First();
+                IPawn automaticPawn = movablePawns.OrderBy(pawn => pawn.Id).First();
                 MovePawnAlongPath(automaticPawn, rolledValue);
                 CheckWinCondition();
 
@@ -149,7 +149,7 @@ public class GameController
             return;
         }
 
-        var selectedPawn = GetMovablePawns().FirstOrDefault(pawn => pawn.Id == pawnId);
+        IPawn? selectedPawn = GetMovablePawns().FirstOrDefault(pawn => pawn.Id == pawnId);
 
         if (selectedPawn is null)
         {
@@ -195,7 +195,7 @@ public class GameController
     public GameState GetGameState()
     {
         // make a copy of each player's pawn list
-        var pawnSnapshot = _playerPawns.ToDictionary(
+        Dictionary<IPlayer,IReadOnlyList<IPawn>> pawnSnapshot = _playerPawns.ToDictionary(
                 pair => pair.Key,
                 pair => (IReadOnlyList<IPawn>) pair.Value.ToList().AsReadOnly()
             );
@@ -237,7 +237,16 @@ public class GameController
 
     private void CheckWinCondition()
     {
-        // TODO: Logic untuk menentukan pemenangnya
+        IPlayer currentPlayer = GetCurrentPlayer();
+
+        if (!_playerPawns[currentPlayer].All(pawn => pawn.Status == PawnStatus.Finished))
+        {
+            return;
+        }
+
+        currentPlayer.IsFinished = true;
+        _currentPhase = TurnPhase.GameOver;
+        OnPlayerWon?.Invoke(currentPlayer);
     }
 
     private void HandleCapture(IPawn target)
@@ -279,7 +288,7 @@ public class GameController
             .Where(pawn => pawn.Color != attackerColor)
             .ToList();
 
-        foreach (var capturedPawn in capturedPawns)
+        foreach (IPawn capturedPawn in capturedPawns)
         {
             HandleCapture(capturedPawn);
         }
@@ -297,7 +306,7 @@ public class GameController
             return false;
         }
 
-        var path = _board.GetFullPath(pawn.Color);
+        IReadOnlyList<Position> path = _board.GetFullPath(pawn.Color);
 
         // Pion yang masih di base hanya dapat keluar dengan angka 6.
         if (pawn.Status == PawnStatus.InBase)
@@ -307,13 +316,13 @@ public class GameController
                 return false;
             }
 
-            var startPosition = path[0];
+            Position startPosition = path[0];
 
             // Tidak boleh keluar jika start diblokade lawan.
             return !IsPathBlocked(startPosition, pawn.Color);
         }
 
-        var targetIndex = pawn.StepIndex + steps;
+        int targetIndex = pawn.StepIndex + steps;
 
         // Pion tidak boleh bergerak melewati finish.
         if (targetIndex >= path.Count)
@@ -322,11 +331,11 @@ public class GameController
         }
 
         // Periksa setiap cell yang dilewati agar tidak melompati blockade.
-        for (var index = pawn.StepIndex + 1;
+        for (int index = pawn.StepIndex + 1;
              index <= targetIndex;
              index++)
         {
-            var position = path[index];
+            Position position = path[index];
 
             if (IsPathBlocked(position, pawn.Color))
             {
@@ -339,7 +348,7 @@ public class GameController
 
     private bool IsPathBlocked(Position targetPosition, Color color)
     {
-        var cell = _board.GetCell(targetPosition);
+        ICell cell = _board.GetCell(targetPosition);
         
         if (cell.Type is CellType.Base or CellType.HomeColumn or CellType.Center)
             return false;
@@ -352,10 +361,10 @@ public class GameController
 
     private void MovePawnAlongPath(IPawn pawn, int steps)
     {
-        var path = _board.GetFullPath(pawn.Color);
+        IReadOnlyList<Position> path = _board.GetFullPath(pawn.Color);
 
         // Tentukan index tujuan sebelum menghapus pion dari cell lama.
-        var targetIndex = pawn.Status == PawnStatus.InBase
+        int targetIndex = pawn.Status == PawnStatus.InBase
             ? 0
             : pawn.StepIndex + steps;
 
@@ -365,7 +374,7 @@ public class GameController
             return;
         }
 
-        var oldPosition = GetCurrentPosition(pawn);
+        Position oldPosition = GetCurrentPosition(pawn);
 
         if (_board.GetCell(oldPosition) is Cell oldCell)
         {
@@ -376,13 +385,11 @@ public class GameController
         pawn.StepIndex = targetIndex;
 
         // Hitung batas Home Column secara dinamis.
-        var finishIndex = path.Count - 1;
+        int finishIndex = path.Count - 1;
 
-        var homeColumnCount =
-            _board.GetHomeColumnPositions(pawn.Color).Count;
+        int homeColumnCount = _board.GetHomeColumnPositions(pawn.Color).Count;
 
-        var homeColumnStartIndex =
-            finishIndex - homeColumnCount;
+        int homeColumnStartIndex = finishIndex - homeColumnCount;
 
         // Perbarui status pion berdasarkan posisinya di path.
         if (pawn.StepIndex == finishIndex)
@@ -398,8 +405,8 @@ public class GameController
             pawn.Status = PawnStatus.OnBoard;
         }
 
-        var targetPosition = path[pawn.StepIndex];
-        var targetCell = _board.GetCell(targetPosition);
+        Position targetPosition = path[pawn.StepIndex];
+        ICell targetCell = _board.GetCell(targetPosition);
 
         CheckAndHandleCapture(targetCell, pawn.Color);
 
@@ -411,7 +418,7 @@ public class GameController
 
     private int PerformRoll()
     {
-        var value = _rng.Next(1, 7);
+        int value = _rng.Next(1, 7);
         _dice.CurrentValue = value;
         return value;
     }
@@ -420,5 +427,4 @@ public class GameController
     {
         OnStateChange?.Invoke(GetGameState());
     }
-    
 }
