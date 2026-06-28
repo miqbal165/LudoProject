@@ -115,10 +115,7 @@ public class GameController
         {
             List<IPawn> currentPawns = _playerPawns[GetCurrentPlayer()];
             bool allPawnsInBase = currentPawns.All(pawn => pawn.Status == PawnStatus.InBase);
-
-            // If all the pawns are still on the base and a 6 is scored,
-            // the first pawn is automatically played. If only one pawn is valid,
-            // it is automatically played.
+            
             if (allPawnsInBase || movablePawns.Count == 1)
             {
                 IPawn automaticPawn = movablePawns.OrderBy(pawn => pawn.Id).First();
@@ -194,7 +191,7 @@ public class GameController
 
     public GameState GetGameState()
     {
-        // make a copy of each player's pawn list
+        // Buat salinan daftar bidak setiap pemain.
         Dictionary<IPlayer,IReadOnlyList<IPawn>> pawnSnapshot = _playerPawns.ToDictionary(
                 pair => pair.Key,
                 pair => (IReadOnlyList<IPawn>) pair.Value.ToList().AsReadOnly()

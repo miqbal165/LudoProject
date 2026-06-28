@@ -11,42 +11,42 @@ public static partial class LudoUi
         Console.WriteLine("PLAYERS SETUP");
         Console.WriteLine("-------------");
 
-        var playerCount = ReadNumber("Total Player (2-4): ", 2, 4);
+        var playerCount = ReadNumber("Total Pemain (2-4): ", 2, 4);
         var players = new List<IPlayer>();
         var availableColors = Enum.GetValues<Color>().ToList();
 
         for (int i = 0; i < playerCount; i++)
         {
             Console.WriteLine();
-            Console.WriteLine($"Player {i + 1}");
+            Console.WriteLine($"Pemain {i + 1}");
 
             string name;
             while (true)
             {
-                Console.Write("Name: ");
+                Console.Write("Nama: ");
                 name = (Console.ReadLine() ?? string.Empty).Trim();
 
                 if (string.IsNullOrWhiteSpace(name))
                 {
-                    Console.WriteLine("Name is empty.");
+                    Console.WriteLine("Nama tidak boleh kosong");
                     continue;
                 }
 
                 if (players.Any(p => p.Name == name))
                 {
-                    Console.WriteLine("The name is already in use");
+                    Console.WriteLine("Nama sudah digunakan.");
                     continue;
                 }
                 break;
             }
             
-            Console.WriteLine("Choose a color: ");
+            Console.WriteLine("Pilihan warna: ");
             for (int colorIndex = 0; colorIndex < availableColors.Count; colorIndex++)
             {
                 Console.WriteLine($"  {colorIndex + 1}. {GetColorName(availableColors[colorIndex])}");
             }
             
-            var selectedColorIndex = ReadNumber("Choose: ", 1, availableColors.Count) - 1;
+            var selectedColorIndex = ReadNumber("Pilih: ", 1, availableColors.Count) - 1;
             
             var selectedColor = availableColors[selectedColorIndex];
             
@@ -55,12 +55,12 @@ public static partial class LudoUi
         }
         Console.WriteLine();
         
-        Console.WriteLine("List Players:");
+        Console.WriteLine("List Pemain:");
         foreach (var player in players)
             Console.WriteLine($"- {player.Name} ({GetColorName(player.Color)})");
 
         Console.WriteLine();
-        Console.Write("Press ENTER to start playing...");
+        Console.Write("Tekan ENTER untuk mulai bermain...");
         Console.ReadLine();
         return players;
     }
@@ -75,7 +75,7 @@ public static partial class LudoUi
                 return value;
             }
             
-            Console.WriteLine($"You must input the number of players, minimum {min} and maximum {max}.");
+            Console.WriteLine($"Kamu harus memasukan jumlah pemain, minimal {min} dan maksimal {max}.");
         }
     }
     

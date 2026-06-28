@@ -13,9 +13,7 @@ internal abstract class Program
         List<IPlayer> players = LudoUi.CreatePlayers();
         IBoard board = new Board();
         IDice dice = new Dice();
-        var controller = new GameController(players, board, dice, new Random());
-
-        controller.OnPlayerWon += LudoUi.ShowWinner;
+        GameController controller = new (players, board, dice, new Random());
 
         LudoUi.RunGame(controller, board);
     }

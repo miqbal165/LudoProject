@@ -27,57 +27,57 @@ public class Board : IBoard
         
         // Creates cells on the board and determines each cell type on the board,
         // whether it is a basic cell or a normal cell.
-        for (var row = 0; row < _cells.GetLength(0); row++)
+        for (int row = 0; row < _cells.GetLength(0); row++)
         {
-            for (var column = 0; column < _cells.GetLength(1); column++)
+            for (int column = 0; column < _cells.GetLength(1); column++)
             {
-                var baseColor = GetBaseColor(row, column);
-                var type = baseColor.HasValue ? CellType.Base : CellType.Normal;
+                Color? baseColor = GetBaseColor(row, column);
+                CellType type = baseColor.HasValue ? CellType.Base : CellType.Normal;
                 _cells[row, column] = new Cell(new Position(row, column), type, baseColor);
             }
         }
 
         // Make a map of the central area which will later be used as the "Center" or finish center.
-        for (var row = 6; row <= 8; row++)
+        for (int row = 6; row <= 8; row++)
         {
-            for (var column = 6; column <= 8; column++)
+            for (int column = 6; column <= 8; column++)
             {
                 _cells[row, column] = new Cell(new Position(row, column), CellType.Center, null);
             }
         }
         
         // Mark all outer lines (which are crosses) as Cell Type Normal first.
-        foreach (var position in GetClockwiseOuterTrack(new Position(6, 1)))
+        foreach (Position position in GetClockwiseOuterTrack(new Position(6, 1)))
         {
             _cells[position.Row, position.Column] = new Cell(position, CellType.Normal, null);
         }
         
         // Marks and determines the color for cells whose CellType is Start.
-        foreach (var color in Enum.GetValues<Color>())
+        foreach (Color color in Enum.GetValues<Color>())
         {
-            var start = GetStartPosition(color);
+            Position start = GetStartPosition(color);
             _cells[start.Row, start.Column] = new Cell(start, CellType.Start, color);
         }
         
-        var protectedPositions = new[]
-        {
+        Position[] protectedPositions =
+        [
             new Position(2, 6),
             new Position(6, 12),
             new Position(12, 8),
             new Position(8, 2)
-        };
+        ];
 
-        foreach (var position in protectedPositions)
+        foreach (Position position in protectedPositions)
             _cells[position.Row, position.Column] = new Cell(position, CellType.Protected, null);
 
         // 
-        foreach (var color in Enum.GetValues<Color>())
+        foreach (Color color in Enum.GetValues<Color>())
         {
-            foreach (var position in GetHomeColumnPositions(color))
+            foreach (Position position in GetHomeColumnPositions(color))
                 _cells[position.Row, position.Column] = new Cell(position, CellType.HomeColumn, color);
         }
 
-        var center = GetCenterPosition();
+        Position center = GetCenterPosition();
         _cells[center.Row, center.Column] = new Cell(center, CellType.Center, null);
 
         BuildAllPaths();
@@ -96,7 +96,7 @@ public class Board : IBoard
     public IReadOnlyList<ICell> GetCellsByType(CellType type)
     {
         List<ICell> result = [];
-        foreach (var cell in _cells)
+        foreach (Cell cell in _cells)
         {
             if (cell.Type == type)
             {
@@ -109,7 +109,7 @@ public class Board : IBoard
 
     public Position GetStartPosition(Color color)
     {
-        var start = color switch
+        Position start = color switch
         {
             Color.Red => new Position(6, 1),
             Color.Blue => new Position(1, 8),
@@ -218,7 +218,7 @@ public class Board : IBoard
     // This method is used to take all the paths that the pawn must take based on its color.
     public IReadOnlyList<Position> GetFullPath(Color color)
     {
-        if (!_pathCache.TryGetValue(color, out var path))
+        if (!_pathCache.TryGetValue(color, out IReadOnlyList<Position>? path))
         {
             throw new InvalidOperationException(
                     $"The path for {color} has not been created yet."
@@ -230,7 +230,7 @@ public class Board : IBoard
 
     private void BuildAllPaths()
     {
-        foreach (var color in Enum.GetValues<Color>())
+        foreach (Color color in Enum.GetValues<Color>())
         {
             _pathCache[color] = BuildPathForColor(color);
         }
@@ -238,7 +238,7 @@ public class Board : IBoard
 
     private IReadOnlyList<Position> BuildPathForColor(Color color)
     {
-        var path = GetClockwiseOuterTrack(GetStartPosition(color)).ToList();
+        List<Position> path = GetClockwiseOuterTrack(GetStartPosition(color)).ToList();
         
         path.RemoveAt(path.Count - 1);
         
@@ -251,8 +251,8 @@ public class Board : IBoard
 
     private IEnumerable<Position> GetClockwiseOuterTrack(Position startFrom)
     {
-        var outerTrack = new List<Position>
-        {
+        List<Position> outerTrack =
+        [
             new(6, 1), new(6, 2), new(6, 3), new(6, 4), new(6, 5),
             new(5, 6), new(4, 6), new(3, 6), new(2, 6), new(1, 6), new(0, 6),
             new(0, 7),
@@ -266,16 +266,16 @@ public class Board : IBoard
             new(8, 5), new(8, 4), new(8, 3), new(8, 2), new(8, 1), new(8, 0),
             new(7, 0),
             new(6, 0)
-        };
+        ];
 
-        var startIndex = outerTrack.IndexOf(startFrom);
+        int startIndex = outerTrack.IndexOf(startFrom);
 
         if (startIndex < 0)
         {
             throw new ArgumentException("The starting position is not on the outside lane.", nameof(startFrom));
         }
 
-        for (var offset = 0; offset < outerTrack.Count; offset++)
+        for (int offset = 0; offset < outerTrack.Count; offset++)
         {
             yield return outerTrack[(startIndex + offset) % outerTrack.Count];
         }

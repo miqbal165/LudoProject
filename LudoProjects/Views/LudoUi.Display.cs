@@ -9,8 +9,7 @@ public static partial class LudoUi
     public static void ShowTitle()
     {
         Console.WriteLine("========================================");
-        Console.WriteLine("           WELCOME TO LUDO GAME");
-        Console.WriteLine("                  CONSOLE");
+        Console.WriteLine("            LUDO GAME CONSOLE");
         Console.WriteLine("========================================");
         Console.WriteLine();
     }
@@ -20,16 +19,16 @@ public static partial class LudoUi
         Console.WriteLine("BOARD");
         Console.WriteLine("-----");
 
-        for (var row = 0; row < 15; row++)
+        for (int row = 0; row < 15; row++)
         {
-            for (var column = 0; column < 15; column++)
+            for (int column = 0; column < 15; column++)
             {
-                var cell = board.GetCell(new Position(row, column));
-                var token = GetCellToken(cell);
-                var consoleColor = GetCellConsoleColor(cell);
+                ICell cell = board.GetCell(new Position(row, column));
+                string token = GetCellToken(cell);
+                ConsoleColor consoleColor = GetCellConsoleColor(cell);
                 
                 Console.Write("[");
-                var originalColor = Console.ForegroundColor;
+                ConsoleColor originalColor = Console.ForegroundColor;
                 Console.ForegroundColor = consoleColor;
                 Console.Write(token.PadRight(3)[..3]);
                 Console.ForegroundColor = originalColor;
@@ -40,8 +39,8 @@ public static partial class LudoUi
         }
 
         Console.WriteLine();
-        Console.WriteLine("Explanation: R/B/G/Y = pawn color, S = start, * = protected, H = home");
-        Console.WriteLine("            R#3/B#3/G#3/Y#3 = BLOCK (3+ pawns of the same color)");
+        Console.WriteLine("Keterangan : R/B/G/Y = warna pawn, S = start, * = protected, H = home");
+        Console.WriteLine("            R#2/B#2/G#2/Y#2 = BLOCK (2+ pawn dengan warna yang sama)");
     }
 
     private static string GetCellToken(ICell cell)
@@ -49,21 +48,19 @@ public static partial class LudoUi
         
         if (cell.OccupyingPawns.Count > 0)
         {
-            var groups = cell.OccupyingPawns.GroupBy(pawn => pawn.Color).ToList();
+            List<IGrouping<Color,IPawn>> groups = cell.OccupyingPawns.GroupBy(pawn => pawn.Color).ToList();
             if (groups.Count == 1)
             {
-                var group = groups[0].OrderBy(pawn => pawn.Id).ToList();
-                var letter = GetColorLetter(group[0].Color);
+                List<IPawn> group = groups[0].OrderBy(pawn => pawn.Id).ToList();
+                string letter = GetColorLetter(group[0].Color);
 
-                if (group.Count >= 3)
+                if (group.Count >= 2)
                     return $"{letter}#{group.Count}";
-                if (group.Count == 2)
-                    return $"{letter}{group[0].Id + 1}{group[1].Id + 1}";
-
+                
                 return $"{letter}{group[0].Id + 1}";
             }
 
-            var mixedLetters = string.Concat(groups.Select(group => GetColorLetter(group.Key)));
+            string mixedLetters = string.Concat(groups.Select(group => GetColorLetter(group.Key)));
             return mixedLetters.Length <= 3 ? mixedLetters : "MIX";
         }
         
@@ -80,7 +77,7 @@ public static partial class LudoUi
 
     private static string GetColorLetter(Color? color)
     {
-        var colorLetter = color switch
+        string colorLetter = color switch
         {
             Color.Red => "R",
             Color.Blue => "B",
@@ -94,7 +91,7 @@ public static partial class LudoUi
     
     private static ConsoleColor GetCellConsoleColor(ICell cell)
     {
-        var color = cell.OccupyingPawns.FirstOrDefault()?.Color ?? cell.Color;
+        Color? color = cell.OccupyingPawns.FirstOrDefault()?.Color ?? cell.Color;
         return color switch
         {
             Color.Red => ConsoleColor.Red,
@@ -110,15 +107,15 @@ public static partial class LudoUi
         Console.WriteLine();
         Console.WriteLine("GAME STATUS");
         Console.WriteLine("-----------");
-        Console.WriteLine($"Turn         : {state.CurrentPlayer.Name} ({GetColorName(state.CurrentPlayer.Color)})");
-        Console.WriteLine($"Phase        : {state.Phase}");
-        Console.WriteLine($"Dice Value   : {(state.LastDiceValue == 0 ? "-" : state.LastDiceValue)}");
-        Console.WriteLine($"Extra Roll   : {(state.ExtraRollPending ? "Yes" : "No")}");
+        Console.WriteLine($"Giliran      : {state.CurrentPlayer.Name} ({GetColorName(state.CurrentPlayer.Color)})");
+        Console.WriteLine($"Fase         : {state.Phase}");
+        Console.WriteLine($"Nilai Dadu   : {(state.LastDiceValue == 0 ? "-" : state.LastDiceValue)}");
+        Console.WriteLine($"Extra Roll   : {(state.ExtraRollPending ? "Iya" : "Tidak")}");
         Console.WriteLine();
 
-        foreach (var player in state.Players)
+        foreach (IPlayer player in state.Players)
         {
-            var pawnDescriptions = state.PlayerPawns[player]
+            IEnumerable<string> pawnDescriptions = state.PlayerPawns[player]
                 .OrderBy(pawn => pawn.Id)
                 .Select(DescribePawnStatus);
             Console.WriteLine($"{player.Name,-12} ({GetColorLetter(player.Color)}) : {string.Join(" | ", pawnDescriptions)}");
@@ -127,7 +124,7 @@ public static partial class LudoUi
 
     private static string DescribePawnStatus(IPawn pawn)
     {
-        var status = pawn.Status switch
+        string status = pawn.Status switch
         {
             PawnStatus.InBase => $"{GetPawnLabel(pawn)}=Base",
             PawnStatus.OnBoard => $"{GetPawnLabel(pawn)}=Track-{pawn.StepIndex}",
