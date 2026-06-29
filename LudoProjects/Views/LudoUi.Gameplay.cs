@@ -229,9 +229,11 @@ public static partial class LudoUi
                             }
                         }
 
+                        Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine(
                             "Pawn tidak dapat di pilih."
                         );
+                        Console.ResetColor();
                     }
 
                     Dictionary<IPawn, (PawnStatus Status, int StepIndex)> beforeMove = state.PlayerPawns
@@ -311,11 +313,13 @@ public static partial class LudoUi
     private static void ShowWinner(IPlayer player)
     {
         Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine("========================================");
         Console.WriteLine($"Pemenang: {player.Name.ToUpper()} " +
                           $"({GetColorName(player.Color)})");
         Console.WriteLine("Semua pawn pemain telah mencapai CENTER.");
         Console.WriteLine("========================================");
+        Console.ResetColor();
         Console.WriteLine("Tekan ENTER untuk keluar...");
         Console.ReadLine();
     }

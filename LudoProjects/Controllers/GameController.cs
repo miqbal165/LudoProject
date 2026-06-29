@@ -191,7 +191,7 @@ public class GameController
 
     public GameState GetGameState()
     {
-        // Buat salinan daftar bidak setiap pemain.
+        // Make a copy of each player's piece list.
         Dictionary<IPlayer,IReadOnlyList<IPawn>> pawnSnapshot = _playerPawns.ToDictionary(
                 pair => pair.Key,
                 pair => (IReadOnlyList<IPawn>) pair.Value.ToList().AsReadOnly()
@@ -305,7 +305,7 @@ public class GameController
 
         IReadOnlyList<Position> path = _board.GetFullPath(pawn.Color);
 
-        // Pion yang masih di base hanya dapat keluar dengan angka 6.
+        // Pawns that are still on the base can only come out with the number 6.
         if (pawn.Status == PawnStatus.InBase)
         {
             if (steps != 6)
@@ -315,19 +315,19 @@ public class GameController
 
             Position startPosition = path[0];
 
-            // Tidak boleh keluar jika start diblokade lawan.
+            // You may not leave if your opponent is blocking the start.
             return !IsPathBlocked(startPosition, pawn.Color);
         }
 
         int targetIndex = pawn.StepIndex + steps;
 
-        // Pion tidak boleh bergerak melewati finish.
+        // Pawns may not move past the finish.
         if (targetIndex >= path.Count)
         {
             return false;
         }
 
-        // Periksa setiap cell yang dilewati agar tidak melompati blockade.
+        // Check each cell you pass so you don't jump over a blockade.
         for (int index = pawn.StepIndex + 1;
              index <= targetIndex;
              index++)
@@ -346,9 +346,11 @@ public class GameController
     private bool IsPathBlocked(Position targetPosition, Color color)
     {
         ICell cell = _board.GetCell(targetPosition);
-        
-        if (cell.Type is CellType.Base or CellType.HomeColumn or CellType.Center)
+
+        if (cell.Type != CellType.Normal)
+        {
             return false;
+        }
 
         return cell.OccupyingPawns
             .Where(pawn => pawn.Color != color)
@@ -360,7 +362,7 @@ public class GameController
     {
         IReadOnlyList<Position> path = _board.GetFullPath(pawn.Color);
 
-        // Tentukan index tujuan sebelum menghapus pion dari cell lama.
+        // Specify the target index before removing the pawn from the old cell.
         int targetIndex = pawn.Status == PawnStatus.InBase
             ? 0
             : pawn.StepIndex + steps;
@@ -378,17 +380,17 @@ public class GameController
             oldCell.RemovePawn(pawn);
         }
 
-        // Perbarui index pion.
+        // Indeks pion.
         pawn.StepIndex = targetIndex;
 
-        // Hitung batas Home Column secara dinamis.
+        // Calculate Home Column limits dynamically.
         int finishIndex = path.Count - 1;
 
         int homeColumnCount = _board.GetHomeColumnPositions(pawn.Color).Count;
 
         int homeColumnStartIndex = finishIndex - homeColumnCount;
 
-        // Perbarui status pion berdasarkan posisinya di path.
+        // Updates pawn status based on position on the path.
         if (pawn.StepIndex == finishIndex)
         {
             pawn.Status = PawnStatus.Finished;

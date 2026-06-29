@@ -28,13 +28,17 @@ public static partial class LudoUi
 
                 if (string.IsNullOrWhiteSpace(name))
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("Nama tidak boleh kosong");
+                    Console.ResetColor();
                     continue;
                 }
 
                 if (players.Any(p => p.Name == name))
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("Nama sudah digunakan.");
+                    Console.ResetColor();
                     continue;
                 }
                 break;
@@ -74,8 +78,10 @@ public static partial class LudoUi
             {
                 return value;
             }
-            
+
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"Kamu harus memasukan jumlah pemain, minimal {min} dan maksimal {max}.");
+            Console.ResetColor();
         }
     }
     
