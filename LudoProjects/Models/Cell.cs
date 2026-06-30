@@ -3,30 +3,22 @@ using LudoProjects.Interfaces;
 
 namespace LudoProjects.Models;
 
-public sealed class Cell : ICell
+public class Cell : ICell
 {
-    private readonly List<IPawn> _occupyingPawns = [];
-
     public Position Position { get; }
     public CellType Type { get; }
     public Color? Color { get; }
-    public IReadOnlyList<IPawn> OccupyingPawns => _occupyingPawns.AsReadOnly();
+    public IReadOnlyList<IPawn> OccupyingPawns { get; }
 
-    public Cell(Position position, CellType type, Color? color)
+    public Cell(
+        Position position,
+        CellType type,
+        Color? color,
+        IReadOnlyList<IPawn> occupyingPawns)
     {
         Position = position;
         Type = type;
         Color = color;
-    }
-
-    internal void AddPawn(IPawn pawn)
-    {
-        if (!_occupyingPawns.Contains(pawn))
-            _occupyingPawns.Add(pawn);
-    }
-
-    internal void RemovePawn(IPawn pawn)
-    {
-        _occupyingPawns.Remove(pawn);
+        OccupyingPawns = occupyingPawns.ToList().AsReadOnly();
     }
 }

@@ -7,10 +7,9 @@ namespace LudoProjects.Views;
 
 public static partial class LudoUi
 {
-    public static void RunGame(GameController controller, IBoard board)
+    public static void RunGame(GameController controller)
     {
         string message = "Permainan dimulai.";
-
         GameState? currentState = null;
         IPlayer? winner = null;
         bool winnerDisplayed = false;
@@ -31,12 +30,10 @@ public static partial class LudoUi
         void HandleStateChange(GameState newState)
         {
             currentState = newState;
-            
             TryClearConsole();
             ShowTitle();
-            DrawBoard(board);
+            DrawBoard(controller);
             DrawGameState(newState);
-
             DisplayWinnerIfReady();
         }
 
@@ -46,7 +43,7 @@ public static partial class LudoUi
             DisplayWinnerIfReady();
         }
 
-        controller.OnStateChange += HandleStateChange;
+        controller.OnStateChanged += HandleStateChange;
         controller.OnPlayerWon += HandlePlayerWon;
 
         try
@@ -57,8 +54,7 @@ public static partial class LudoUi
             {
                 throw new InvalidOperationException(
                     "StartGame() tidak mengirim state. " +
-                    "Pastikan StartGame() memanggil BroadcastState()."
-                );
+                    "Pastikan StartGame() memanggil BroadcastState().");
             }
 
             while (currentState.Phase != TurnPhase.GameOver)
@@ -76,89 +72,70 @@ public static partial class LudoUi
                 {
                     IPlayer playerBeforeRoll = state.CurrentPlayer;
 
-                    Dictionary<IPawn,(PawnStatus Status, int StepIndex)> pawnStatesBeforeRoll = state.PlayerPawns
-                        .SelectMany(pair => pair.Value)
-                        .ToDictionary(
-                            pawn => pawn,
-                            pawn => (pawn.Status, pawn.StepIndex)
-                        );
+                    Dictionary<IPawn, (PawnStatus Status, int StepIndex)>
+                        pawnStatesBeforeRoll = state.PlayerPawns
+                            .SelectMany(pair => pair.Value)
+                            .ToDictionary(
+                                pawn => pawn,
+                                pawn => (pawn.Status, pawn.StepIndex));
 
                     Console.WriteLine();
                     Console.Write(
-                        $"{playerBeforeRoll.Name.ToUpper()} " +
-                        "Tekan ENTER untuk mengocok dadu..."
-                    );
-
+                        $"{playerBeforeRoll.Name.ToUpperInvariant()} " +
+                        "tekan ENTER untuk mengocok dadu...");
                     Console.ReadLine();
 
                     controller.RollDice();
 
                     GameState afterRoll = currentState
-                                    ?? throw new InvalidOperationException(
-                                        "State tidak tersedia setelah dadu dikocok."
-                                    );
+                        ?? throw new InvalidOperationException(
+                            "State tidak tersedia setelah dadu dikocok.");
 
                     IPawn? automaticallyMovedPawn =
                         afterRoll.PlayerPawns[playerBeforeRoll]
                             .FirstOrDefault(pawn =>
                                 pawnStatesBeforeRoll.TryGetValue(
                                     pawn,
-                                    out (PawnStatus Status, int StepIndex) oldState
-                                )
+                                    out (PawnStatus Status, int StepIndex) oldState)
                                 &&
-                                (
-                                    oldState.Status != pawn.Status ||
-                                    oldState.StepIndex != pawn.StepIndex
-                                )
-                            );
+                                (oldState.Status != pawn.Status ||
+                                 oldState.StepIndex != pawn.StepIndex));
 
                     List<string> automaticallyCaptured = afterRoll.PlayerPawns
                         .SelectMany(pair => pair.Value)
                         .Where(pawn =>
                             pawnStatesBeforeRoll.TryGetValue(
                                 pawn,
-                                out (PawnStatus Status, int StepIndex) oldState
-                            )
-                            &&
-                            oldState.Status != PawnStatus.InBase
-                            &&
-                            pawn.Status == PawnStatus.InBase
-                        )
+                                out (PawnStatus Status, int StepIndex) oldState)
+                            && oldState.Status != PawnStatus.InBase
+                            && pawn.Status == PawnStatus.InBase)
                         .Select(GetPawnLabel)
                         .ToList();
 
                     if (automaticallyMovedPawn is not null)
                     {
-                        string captureText =
-                            automaticallyCaptured.Count > 0
-                                ? $" dan menendang " +
-                                  $"{string.Join(", ", automaticallyCaptured)} " +
-                                  "ke base"
-                                : string.Empty;
+                        string captureText = automaticallyCaptured.Count > 0
+                            ? $" dan menendang " +
+                              $"{string.Join(", ", automaticallyCaptured)} ke base"
+                            : string.Empty;
 
                         string extraText =
                             ReferenceEquals(
                                 playerBeforeRoll,
-                                afterRoll.CurrentPlayer
-                            )
-                            &&
-                            afterRoll.Phase == TurnPhase.Rolling
-                                ? "Pemain mendapatkan kesempatan untuk mengocok dadu lagi."
+                                afterRoll.CurrentPlayer)
+                            && afterRoll.Phase == TurnPhase.Rolling
+                                ? " Pemain mendapatkan kesempatan mengocok lagi."
                                 : string.Empty;
 
                         message =
                             $"Hasil dadu {afterRoll.LastDiceValue}. " +
                             $"{GetPawnLabel(automaticallyMovedPawn)} " +
-                            $"otomatis pawn yang dimainkan {captureText}.{extraText}";
+                            $"otomatis dimainkan{captureText}.{extraText}";
                     }
-                    else if (
-                        !ReferenceEquals(
-                            playerBeforeRoll,
-                            afterRoll.CurrentPlayer
-                        )
-                        &&
-                        afterRoll.LastDiceValue == 6
-                    )
+                    else if (!ReferenceEquals(
+                                 playerBeforeRoll,
+                                 afterRoll.CurrentPlayer)
+                             && afterRoll.LastDiceValue == 6)
                     {
                         message =
                             $"{playerBeforeRoll.Name} mendapatkan angka 6 " +
@@ -168,27 +145,22 @@ public static partial class LudoUi
                     {
                         message =
                             $"Hasil dadu {playerBeforeRoll.Name}: " +
-                            $"{afterRoll.LastDiceValue}. " +
-                            "Pilih pawn yang mau dimainkan.";
+                            $"{afterRoll.LastDiceValue}. Pilih pawn yang dimainkan.";
                     }
-                    else if (
-                        ReferenceEquals(
-                            playerBeforeRoll,
-                            afterRoll.CurrentPlayer
-                        )
-                        &&
-                        afterRoll.LastDiceValue == 6
-                    )
+                    else if (ReferenceEquals(
+                                 playerBeforeRoll,
+                                 afterRoll.CurrentPlayer)
+                             && afterRoll.LastDiceValue == 6)
                     {
                         message =
-                            "Hasil kocok dadu adalah 6, tetapi tidak ada pawn yang bisa digerakan. " +
-                            "Pemain mendapatkan kesempatan untuk mengocok dadu lagi.";
+                            "Hasil dadu 6, tetapi tidak ada langkah valid. " +
+                            "Pemain memperoleh roll tambahan.";
                     }
                     else
                     {
                         message =
                             $"Hasil dadu {afterRoll.LastDiceValue}. " +
-                            "Tidak ada pawn yang bisa digerakan; melewati giliran.";
+                            "Tidak ada pawn yang bisa digerakkan; giliran dilewati.";
                     }
 
                     continue;
@@ -197,18 +169,14 @@ public static partial class LudoUi
                 if (state.Phase == TurnPhase.SelectingPawn)
                 {
                     Console.WriteLine();
-                    Console.WriteLine(
-                        $"Hasil dadu: {state.LastDiceValue}"
-                    );
+                    Console.WriteLine($"Hasil dadu: {state.LastDiceValue}");
                     Console.WriteLine("Pawn yang bisa dimainkan:");
 
-                    foreach (IPawn pawn in state.MovablePawns
-                                 .OrderBy(pawn => pawn.Id))
+                    foreach (IPawn pawn in state.MovablePawns.OrderBy(pawn => pawn.Id))
                     {
                         Console.WriteLine(
                             $"  {pawn.Id + 1}. " +
-                            $"{DescribeMove(board, pawn, state.LastDiceValue)}"
-                        );
+                            DescribeMove(controller, pawn, state.LastDiceValue));
                     }
 
                     int selectedPawnId;
@@ -217,62 +185,52 @@ public static partial class LudoUi
                     {
                         Console.Write("Pilih pawn yang mau dimainkan: ");
 
-                        if (int.TryParse(
-                                Console.ReadLine(),
-                                out int selectedNumber))
+                        if (int.TryParse(Console.ReadLine(), out int selectedNumber))
                         {
                             selectedPawnId = selectedNumber - 1;
 
-                            if (state.MovablePawns.Any(pawn => pawn.Id == selectedPawnId))
+                            if (state.MovablePawns.Any(
+                                    pawn => pawn.Id == selectedPawnId))
                             {
                                 break;
                             }
                         }
 
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine(
-                            "Pawn tidak dapat di pilih."
-                        );
+                        Console.WriteLine("Pawn tidak dapat dipilih.");
                         Console.ResetColor();
                     }
 
-                    Dictionary<IPawn, (PawnStatus Status, int StepIndex)> beforeMove = state.PlayerPawns
-                        .SelectMany(pair => pair.Value)
-                        .ToDictionary(
-                            pawn => pawn,
-                            pawn => (pawn.Status, pawn.StepIndex)
-                        );
+                    Dictionary<IPawn, (PawnStatus Status, int StepIndex)> beforeMove =
+                        state.PlayerPawns
+                            .SelectMany(pair => pair.Value)
+                            .ToDictionary(
+                                pawn => pawn,
+                                pawn => (pawn.Status, pawn.StepIndex));
 
-                    IPawn selectedPawn = state.MovablePawns.Single(pawn => pawn.Id == selectedPawnId
-                    );
+                    IPawn selectedPawn = state.MovablePawns.Single(
+                        pawn => pawn.Id == selectedPawnId);
 
                     string selectedLabel = GetPawnLabel(selectedPawn);
-
                     string moveDescription = DescribeMove(
-                        board,
+                        controller,
                         selectedPawn,
-                        state.LastDiceValue
-                    );
-                    
+                        state.LastDiceValue);
+
                     controller.SelectPawn(selectedPawnId);
 
                     GameState afterMove = currentState
-                                          ?? throw new InvalidOperationException(
-                                              "State tidak tersedia setelah pawn bergerak."
-                                          );
+                        ?? throw new InvalidOperationException(
+                            "State tidak tersedia setelah pawn bergerak.");
 
                     List<string> captured = afterMove.PlayerPawns
                         .SelectMany(pair => pair.Value)
                         .Where(pawn =>
                             beforeMove.TryGetValue(
                                 pawn,
-                                out (PawnStatus Status, int StepIndex) oldState
-                            )
-                            &&
-                            oldState.Status != PawnStatus.InBase
-                            &&
-                            pawn.Status == PawnStatus.InBase
-                        )
+                                out (PawnStatus Status, int StepIndex) oldState)
+                            && oldState.Status != PawnStatus.InBase
+                            && pawn.Status == PawnStatus.InBase)
                         .Select(GetPawnLabel)
                         .ToList();
 
@@ -287,27 +245,43 @@ public static partial class LudoUi
         }
         finally
         {
-            controller.OnStateChange -= HandleStateChange;
+            controller.OnStateChanged -= HandleStateChange;
             controller.OnPlayerWon -= HandlePlayerWon;
         }
     }
 
-    private static string DescribeMove(IBoard board, IPawn pawn, int diceValue)
+    private static string DescribeMove(
+        GameController controller,
+        IPawn pawn,
+        int diceValue)
     {
         if (pawn.Status == PawnStatus.InBase)
+        {
             return $"{GetPawnLabel(pawn)} keluar dari BASE ke START";
+        }
 
-        IReadOnlyList<Position> path = board.GetFullPath(pawn.Color);
+        IReadOnlyList<Position> path = controller.GetFullPath(pawn.Color);
         int targetIndex = pawn.StepIndex + diceValue;
         Position target = path[targetIndex];
+        int finishIndex = path.Count - 1;
+        int homeColumnStartIndex =
+            finishIndex - controller.GetHomeColumnPositions(pawn.Color).Count;
 
-        if (targetIndex == path.Count - 1)
+        if (targetIndex == finishIndex)
+        {
             return $"{GetPawnLabel(pawn)} maju {diceValue} langkah ke CENTER/FINISH";
+        }
 
-        if (targetIndex >= 52)
-            return $"{GetPawnLabel(pawn)} maju {diceValue} langkah ke Home kolom ({target.Row},{target.Column})";
+        if (targetIndex >= homeColumnStartIndex)
+        {
+            return
+                $"{GetPawnLabel(pawn)} maju {diceValue} langkah " +
+                $"ke Home Column ({target.Row},{target.Column})";
+        }
 
-        return $"{GetPawnLabel(pawn)} maju {diceValue} langkah ke kolom ({target.Row},{target.Column})";
+        return
+            $"{GetPawnLabel(pawn)} maju {diceValue} langkah " +
+            $"ke cell ({target.Row},{target.Column})";
     }
 
     private static void ShowWinner(IPlayer player)
@@ -315,8 +289,9 @@ public static partial class LudoUi
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine("========================================");
-        Console.WriteLine($"Pemenang: {player.Name.ToUpper()} " +
-                          $"({GetColorName(player.Color)})");
+        Console.WriteLine(
+            $"Pemenang: {player.Name.ToUpperInvariant()} " +
+            $"({GetColorName(player.Color)})");
         Console.WriteLine("Semua pawn pemain telah mencapai CENTER.");
         Console.WriteLine("========================================");
         Console.ResetColor();

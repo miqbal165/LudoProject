@@ -1,3 +1,4 @@
+using LudoProjects.Controllers;
 using LudoProjects.Enums;
 using LudoProjects.Interfaces;
 using LudoProjects.Models;
@@ -14,7 +15,7 @@ public static partial class LudoUi
         Console.WriteLine();
     }
     
-    public static void DrawBoard(IBoard board)
+    public static void DrawBoard(GameController controller)
     {
         Console.WriteLine("BOARD");
         Console.WriteLine("-----");
@@ -23,7 +24,7 @@ public static partial class LudoUi
         {
             for (int column = 0; column < 15; column++)
             {
-                ICell cell = board.GetCell(new Position(row, column));
+                ICell cell = controller.GetCell(new Position(row, column));
                 string token = GetCellToken(cell);
                 ConsoleColor consoleColor = GetCellConsoleColor(cell);
                 
