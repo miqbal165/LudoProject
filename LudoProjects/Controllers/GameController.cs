@@ -14,41 +14,28 @@ public class GameController
     private bool _extraRollPending;
     private int _consecutiveSixes;
     private TurnPhase _currentPhase;
-    private readonly Random _rng;
+    private readonly Random _randomDiceNumberGenerator;
     
-    public Action<GameState> OnStateChange { get; set; }
-    public Action<IPlayer> OnPlayerWon { get; set; }
+    public Action<GameState>? OnStateChange { get; set; }
+    public Action<IPlayer>? OnPlayerWon { get; set; }
 
-    public GameController(List<IPlayer> players, IBoard board, IDice dice, Random rng)
+    public GameController(
+        List<IPlayer> players, 
+        Dictionary<IPlayer, List<IPawn>> playerPawns, 
+        IBoard board, 
+        IDice dice, 
+        Random randomDiceNumberGenerator
+        )
     {
         _players = players;
+        _playerPawns = playerPawns;
         _board = board;
         _dice = dice;
-        _rng = rng;
-        _playerPawns = new Dictionary<IPlayer, List<IPawn>>();
+        _randomDiceNumberGenerator = randomDiceNumberGenerator;
         _currentPlayerIndex = 0;
         _extraRollPending = false;
         _consecutiveSixes = 0;
         _currentPhase = TurnPhase.WaitingToStart;
-
-        foreach (IPlayer player in _players)
-        {
-            List<IPawn> pawns = [];
-            IReadOnlyList<Position> basePositions = _board.GetBasePositions(player.Color);
-
-            for (int pawnId = 0; pawnId < 4; pawnId++)
-            {
-                IPawn pawn = new Pawn(pawnId, player.Color);
-                pawns.Add(pawn);
-
-                if (_board.GetCell(basePositions[pawnId]) is Cell baseCell)
-                {
-                    baseCell.AddPawn(pawn);
-                }
-            }
-
-            _playerPawns[player] = pawns;
-        }
     }
 
     public void StartGame()
@@ -221,7 +208,7 @@ public class GameController
     {
         IPlayer currentPlayer = GetCurrentPlayer();
 
-        if (!_playerPawns[currentPlayer].All(pawn => pawn.Status == PawnStatus.Finished))
+        if (_playerPawns[currentPlayer].Any(pawn => pawn.Status != PawnStatus.Finished))
         {
             return;
         }
@@ -400,7 +387,7 @@ public class GameController
 
     private int PerformRoll()
     {
-        int value = _rng.Next(1, 7);
+        int value = (_randomDiceNumberGenerator).Next(1, 7);
         _dice.CurrentValue = value;
         return value;
     }

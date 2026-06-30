@@ -11,9 +11,6 @@ public sealed class Player : IPlayer
 
     public Player(string name, Color color)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Player names cannot be blank.", nameof(name));
-
         Name = name.Trim();
         Color = color;
         IsFinished = false;

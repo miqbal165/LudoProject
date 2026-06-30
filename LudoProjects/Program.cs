@@ -9,12 +9,17 @@ internal abstract class Program
 {
     public static void Main()
     {
-        LudoUi.ShowTitle();
-        List<IPlayer> players = LudoUi.CreatePlayers();
         IBoard board = new Board();
         IDice dice = new Dice();
-        GameController controller = new (players, board, dice, new Random());
+        Random randomDiceNumberGenerator = new Random();
 
+        List<IPlayer> players = LudoUi.CreatePlayers();
+        Dictionary<IPlayer, List<IPawn>> playerPawns = LudoUi.CreatePlayerPawns(players, board);
+        
+        GameController controller = new (players, playerPawns, 
+            board, dice, randomDiceNumberGenerator);
+
+        LudoUi.ShowTitle();
         LudoUi.RunGame(controller, board);
     }
 }

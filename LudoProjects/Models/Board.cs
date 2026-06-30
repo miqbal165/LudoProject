@@ -10,7 +10,6 @@ public class Board : IBoard
 
     public Board()
     {
-        // initialize row & column ludo board
         _cells = new Cell[15, 15];
         
         static Color? GetBaseColor(int row, int column)

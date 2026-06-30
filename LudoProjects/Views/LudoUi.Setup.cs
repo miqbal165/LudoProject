@@ -69,6 +69,31 @@ public static partial class LudoUi
         return players;
     }
 
+    public static Dictionary<IPlayer, List<IPawn>> CreatePlayerPawns(List<IPlayer> players, IBoard board)
+    {
+        Dictionary<IPlayer, List<IPawn>> playerPawns = new();
+        foreach (IPlayer player in players)
+        {
+            List<IPawn> pawns = [];
+            IReadOnlyList<Position> basePositions = board.GetBasePositions(player.Color);
+        
+            for (int pawnId = 0; pawnId < 4; pawnId++)
+            {
+                IPawn pawn = new Pawn(pawnId, player.Color);
+                pawns.Add(pawn);
+        
+                if (board.GetCell(basePositions[pawnId]) is Cell baseCell)
+                {
+                    baseCell.AddPawn(pawn);
+                }
+            }
+        
+            playerPawns[player] = pawns;
+        }
+
+        return playerPawns;
+    }
+    
     private static int ReadNumber(string prompt, int min, int max)
     {
         while (true)
@@ -84,7 +109,6 @@ public static partial class LudoUi
             Console.ResetColor();
         }
     }
-    
     private static string GetColorName(Color color) => color switch
     {
         Color.Red => "Red",
