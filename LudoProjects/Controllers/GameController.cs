@@ -21,7 +21,6 @@ public class GameController
 
     public GameController(List<IPlayer> players, IBoard board, IDice dice, Random rng)
     {
-
         if (players.Count < 2 || players.Count > 4)
         {
             throw new ArgumentException("Minimum players must be 2 and maximum is 4.");

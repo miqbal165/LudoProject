@@ -21,14 +21,12 @@ public sealed class Cell : ICell
 
     internal void AddPawn(IPawn pawn)
     {
-        ArgumentNullException.ThrowIfNull(pawn);
         if (!_occupyingPawns.Contains(pawn))
             _occupyingPawns.Add(pawn);
     }
 
     internal void RemovePawn(IPawn pawn)
     {
-        ArgumentNullException.ThrowIfNull(pawn);
         _occupyingPawns.Remove(pawn);
     }
 }
