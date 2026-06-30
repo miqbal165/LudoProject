@@ -85,11 +85,6 @@ public class Board : IBoard
     
     public ICell GetCell(Position position)
     {
-        if (position.Row < 0 || position.Row >= 15 || position.Column < 0 || position.Column >= 15)
-        {
-            throw new ArgumentOutOfRangeException(nameof(position), "The position is outside the board.");
-        }
-
         return _cells[position.Row, position.Column];
     }
 
@@ -269,12 +264,7 @@ public class Board : IBoard
         ];
 
         int startIndex = outerTrack.IndexOf(startFrom);
-
-        if (startIndex < 0)
-        {
-            throw new ArgumentException("The starting position is not on the outside lane.", nameof(startFrom));
-        }
-
+        
         for (int offset = 0; offset < outerTrack.Count; offset++)
         {
             yield return outerTrack[(startIndex + offset) % outerTrack.Count];
