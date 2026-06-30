@@ -21,16 +21,6 @@ public class GameController
 
     public GameController(List<IPlayer> players, IBoard board, IDice dice, Random rng)
     {
-        if (players.Count < 2 || players.Count > 4)
-        {
-            throw new ArgumentException("Minimum players must be 2 and maximum is 4.");
-        }
-
-        if (players.Select(p => p.Color).Distinct().Count() != players.Count)
-        {
-            throw new ArgumentException("Each player must choose a different color.");
-        }
-
         _players = players;
         _board = board;
         _dice = dice;
