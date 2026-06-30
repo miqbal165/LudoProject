@@ -80,7 +80,7 @@ public static partial class LudoUi
             }
 
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"Kamu harus menginput dengan nilai minimal {min} dan maksimal {max}");
+            Console.WriteLine($"Kamu harus menginput dengan nilai minimal {min} dan maksimal {max}.");
             Console.ResetColor();
         }
     }
