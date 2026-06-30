@@ -70,7 +70,7 @@ public class Board : IBoard
         foreach (Position position in protectedPositions)
             _cells[position.Row, position.Column] = new Cell(position, CellType.Protected, null);
 
-        // 
+        
         foreach (Color color in Enum.GetValues<Color>())
         {
             foreach (Position position in GetHomeColumnPositions(color))
@@ -79,7 +79,7 @@ public class Board : IBoard
 
         Position center = GetCenterPosition();
         _cells[center.Row, center.Column] = new Cell(center, CellType.Center, null);
-
+        
         BuildAllPaths();
     }
     

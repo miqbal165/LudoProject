@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LudoProjects")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+61ada93db2b31557bdc394cb8bc322f392959096")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f769baec6985011bb0f228c6e87434ea2c60260a")]
 [assembly: System.Reflection.AssemblyProductAttribute("LudoProjects")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LudoProjects")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -21,10 +21,6 @@ public class GameController
 
     public GameController(List<IPlayer> players, IBoard board, IDice dice, Random rng)
     {
-        ArgumentNullException.ThrowIfNull(players);
-        ArgumentNullException.ThrowIfNull(board);
-        ArgumentNullException.ThrowIfNull(dice);
-        ArgumentNullException.ThrowIfNull(rng);
 
         if (players.Count < 2 || players.Count > 4)
         {
@@ -379,8 +375,6 @@ public class GameController
         {
             oldCell.RemovePawn(pawn);
         }
-
-        // Indeks pion.
         pawn.StepIndex = targetIndex;
 
         // Calculate Home Column limits dynamically.
