@@ -5,14 +5,11 @@ namespace LudoProjects.Validators;
 
 public static class BoardValidator
 {
-    public static ICell GetRequiredCell(
-        IBoard board,
-        Position position)
+    public static ICell GetRequiredCell(IBoard board, Position position)
     {
         ArgumentNullException.ThrowIfNull(board);
 
-        if (position.Row < 0 ||
-            position.Row >= board.Cells.GetLength(0) ||
+        if (position.Row < 0 || position.Row >= board.Cells.GetLength(0) ||
             position.Column < 0 ||
             position.Column >= board.Cells.GetLength(1))
         {
@@ -22,8 +19,7 @@ public static class BoardValidator
                 "is outside the board.");
         }
 
-        Cell? cell =
-            board.Cells[
+        Cell? cell = board.Cells[
                 position.Row,
                 position.Column];
 

@@ -2,6 +2,8 @@ using LudoProjects.Controllers;
 using LudoProjects.Enums;
 using LudoProjects.Interfaces;
 using LudoProjects.Models;
+using Spectre.Console;
+using SpectreColor = Spectre.Console.Color;
 
 namespace LudoProjects.Views;
 
@@ -9,16 +11,19 @@ public static partial class LudoUi
 {
     public static void RunGame(GameController controller)
     {
-        string message = "Permainan dimulai.";
+        string message = "Permainan dimulai. Semoga beruntung!";
         GameState? currentState = null;
-        IPlayer? winner = null;
+        IPlayer? winnerFromEvent = null;
         bool winnerDisplayed = false;
 
-        void DisplayWinnerIfReady()
+        void DisplayWinnerIfReady(GameState state)
         {
+            IPlayer? winner =
+                state.Winner ?? winnerFromEvent;
+
             if (winnerDisplayed ||
-                winner is null ||
-                currentState?.Phase != TurnPhase.GameOver)
+                state.Phase != TurnPhase.GameOver ||
+                winner is null)
             {
                 return;
             }
@@ -30,17 +35,23 @@ public static partial class LudoUi
         void HandleStateChange(GameState newState)
         {
             currentState = newState;
+
             TryClearConsole();
             ShowTitle();
             DrawBoard(controller);
             DrawGameState(newState);
-            DisplayWinnerIfReady();
+
+            DisplayWinnerIfReady(newState);
         }
 
         void HandlePlayerWon(IPlayer winningPlayer)
         {
-            winner = winningPlayer;
-            DisplayWinnerIfReady();
+            winnerFromEvent = winningPlayer;
+
+            if (currentState is not null)
+            {
+                DisplayWinnerIfReady(currentState);
+            }
         }
 
         controller.OnStateChanged += HandleStateChange;
@@ -52,9 +63,12 @@ public static partial class LudoUi
 
             if (currentState is null)
             {
-                throw new InvalidOperationException(
-                    "StartGame() tidak mengirim state. " +
-                    "Pastikan StartGame() memanggil BroadcastState().");
+                ShowMessage(
+                    "State permainan belum tersedia. Pastikan StartGame() " +
+                    "memanggil BroadcastState().",
+                    "red");
+
+                return;
             }
 
             while (currentState.Phase != TurnPhase.GameOver)
@@ -63,8 +77,7 @@ public static partial class LudoUi
 
                 if (!string.IsNullOrWhiteSpace(message))
                 {
-                    Console.WriteLine();
-                    Console.WriteLine($"> {message}");
+                    ShowMessage(message);
                     message = string.Empty;
                 }
 
@@ -79,17 +92,33 @@ public static partial class LudoUi
                                 pawn => pawn,
                                 pawn => (pawn.Status, pawn.StepIndex));
 
-                    Console.WriteLine();
-                    Console.Write(
-                        $"{playerBeforeRoll.Name.ToUpperInvariant()} " +
-                        "tekan ENTER untuk mengocok dadu...");
-                    Console.ReadLine();
+                    string playerName =
+                        Markup.Escape(playerBeforeRoll.Name);
+
+                    AnsiConsole.Prompt(
+                        new SelectionPrompt<string>()
+                            .Title(
+                                $"Giliran {GetColoredText(playerBeforeRoll.Color, playerName)}. " +
+                                "Pilih aksi:")
+                            .HighlightStyle(
+                                new Style(
+                                    SpectreColor.Black,
+                                    SpectreColor.Cyan1,
+                                    Decoration.Bold))
+                            .AddChoices("🎲 Kocok dadu"));
 
                     controller.RollDice();
 
-                    GameState afterRoll = currentState
-                        ?? throw new InvalidOperationException(
-                            "State tidak tersedia setelah dadu dikocok.");
+                    if (currentState is null)
+                    {
+                        ShowMessage(
+                            "State tidak tersedia setelah dadu dikocok.",
+                            "red");
+
+                        return;
+                    }
+
+                    GameState afterRoll = currentState;
 
                     IPawn? automaticallyMovedPawn =
                         afterRoll.PlayerPawns[playerBeforeRoll]
@@ -115,7 +144,7 @@ public static partial class LudoUi
                     if (automaticallyMovedPawn is not null)
                     {
                         string captureText = automaticallyCaptured.Count > 0
-                            ? $" dan menendang " +
+                            ? " dan menendang " +
                               $"{string.Join(", ", automaticallyCaptured)} ke base"
                             : string.Empty;
 
@@ -124,7 +153,7 @@ public static partial class LudoUi
                                 playerBeforeRoll,
                                 afterRoll.CurrentPlayer)
                             && afterRoll.Phase == TurnPhase.Rolling
-                                ? " Pemain mendapatkan kesempatan mengocok lagi."
+                                ? " Pemain mendapat kesempatan mengocok lagi."
                                 : string.Empty;
 
                         message =
@@ -145,7 +174,7 @@ public static partial class LudoUi
                     {
                         message =
                             $"Hasil dadu {playerBeforeRoll.Name}: " +
-                            $"{afterRoll.LastDiceValue}. Pilih pawn yang dimainkan.";
+                            $"{afterRoll.LastDiceValue}. Pilih pion yang dimainkan.";
                     }
                     else if (ReferenceEquals(
                                  playerBeforeRoll,
@@ -160,7 +189,7 @@ public static partial class LudoUi
                     {
                         message =
                             $"Hasil dadu {afterRoll.LastDiceValue}. " +
-                            "Tidak ada pawn yang bisa digerakkan; giliran dilewati.";
+                            "Tidak ada pion yang dapat digerakkan; giliran dilewati.";
                     }
 
                     continue;
@@ -168,38 +197,40 @@ public static partial class LudoUi
 
                 if (state.Phase == TurnPhase.SelectingPawn)
                 {
-                    Console.WriteLine();
-                    Console.WriteLine($"Hasil dadu: {state.LastDiceValue}");
-                    Console.WriteLine("Pawn yang bisa dimainkan:");
+                    Dictionary<string, int> pawnChoices =
+                        state.MovablePawns
+                            .OrderBy(pawn => pawn.Id)
+                            .ToDictionary(
+                                pawn =>
+                                    GetColoredText(
+                                        pawn.Color,
+                                        GetPawnLabel(pawn)) +
+                                    " — " +
+                                    Markup.Escape(
+                                        DescribeMove(
+                                            controller,
+                                            pawn,
+                                            state.LastDiceValue)),
+                                pawn => pawn.Id);
 
-                    foreach (IPawn pawn in state.MovablePawns.OrderBy(pawn => pawn.Id))
-                    {
-                        Console.WriteLine(
-                            $"  {pawn.Id + 1}. " +
-                            DescribeMove(controller, pawn, state.LastDiceValue));
-                    }
+                    string selectedChoice = AnsiConsole.Prompt(
+                        new SelectionPrompt<string>()
+                            .Title(
+                                $"Dadu menunjukkan [bold yellow]" +
+                                $"{GetDiceFace(state.LastDiceValue)} " +
+                                $"{state.LastDiceValue}[/]. " +
+                                "Pilih pion:")
+                            .PageSize(6)
+                            .MoreChoicesText(
+                                "[grey](Gunakan tombol panah untuk pilihan lain)[/]")
+                            .HighlightStyle(
+                                new Style(
+                                    SpectreColor.Black,
+                                    SpectreColor.Yellow,
+                                    Decoration.Bold))
+                            .AddChoices(pawnChoices.Keys));
 
-                    int selectedPawnId;
-
-                    while (true)
-                    {
-                        Console.Write("Pilih pawn yang mau dimainkan: ");
-
-                        if (int.TryParse(Console.ReadLine(), out int selectedNumber))
-                        {
-                            selectedPawnId = selectedNumber - 1;
-
-                            if (state.MovablePawns.Any(
-                                    pawn => pawn.Id == selectedPawnId))
-                            {
-                                break;
-                            }
-                        }
-
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("Pawn tidak dapat dipilih.");
-                        Console.ResetColor();
-                    }
+                    int selectedPawnId = pawnChoices[selectedChoice];
 
                     Dictionary<IPawn, (PawnStatus Status, int StepIndex)> beforeMove =
                         state.PlayerPawns
@@ -211,7 +242,9 @@ public static partial class LudoUi
                     IPawn selectedPawn = state.MovablePawns.Single(
                         pawn => pawn.Id == selectedPawnId);
 
-                    string selectedLabel = GetPawnLabel(selectedPawn);
+                    string selectedLabel =
+                        GetPawnLabel(selectedPawn);
+
                     string moveDescription = DescribeMove(
                         controller,
                         selectedPawn,
@@ -219,9 +252,16 @@ public static partial class LudoUi
 
                     controller.SelectPawn(selectedPawnId);
 
-                    GameState afterMove = currentState
-                        ?? throw new InvalidOperationException(
-                            "State tidak tersedia setelah pawn bergerak.");
+                    if (currentState is null)
+                    {
+                        ShowMessage(
+                            "State tidak tersedia setelah pion bergerak.",
+                            "red");
+
+                        return;
+                    }
+
+                    GameState afterMove = currentState;
 
                     List<string> captured = afterMove.PlayerPawns
                         .SelectMany(pair => pair.Value)
@@ -241,7 +281,10 @@ public static partial class LudoUi
                 }
             }
 
-            DisplayWinnerIfReady();
+            if (currentState is not null)
+            {
+                DisplayWinnerIfReady(currentState);
+            }
         }
         finally
         {
@@ -257,19 +300,28 @@ public static partial class LudoUi
     {
         if (pawn.Status == PawnStatus.InBase)
         {
-            return $"{GetPawnLabel(pawn)} keluar dari BASE ke START";
+            return $"{GetPawnLabel(pawn)} keluar dari Base menuju Start";
         }
 
-        IReadOnlyList<Position> path = controller.GetFullPath(pawn.Color);
+        IReadOnlyList<Position> path =
+            controller.GetFullPath(pawn.Color);
+
         int targetIndex = pawn.StepIndex + diceValue;
+
+        if (targetIndex < 0 || targetIndex >= path.Count)
+        {
+            return $"{GetPawnLabel(pawn)} tidak memiliki langkah valid";
+        }
+
         Position target = path[targetIndex];
         int finishIndex = path.Count - 1;
         int homeColumnStartIndex =
-            finishIndex - controller.GetHomeColumnPositions(pawn.Color).Count;
+            finishIndex -
+            controller.GetHomeColumnPositions(pawn.Color).Count;
 
         if (targetIndex == finishIndex)
         {
-            return $"{GetPawnLabel(pawn)} maju {diceValue} langkah ke CENTER/FINISH";
+            return $"{GetPawnLabel(pawn)} maju {diceValue} langkah ke Finish";
         }
 
         if (targetIndex >= homeColumnStartIndex)
@@ -286,16 +338,34 @@ public static partial class LudoUi
 
     private static void ShowWinner(IPlayer player)
     {
-        Console.WriteLine();
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("========================================");
-        Console.WriteLine(
-            $"Pemenang: {player.Name.ToUpperInvariant()} " +
-            $"({GetColorName(player.Color)})");
-        Console.WriteLine("Semua pawn pemain telah mencapai CENTER.");
-        Console.WriteLine("========================================");
-        Console.ResetColor();
-        Console.WriteLine("Tekan ENTER untuk keluar...");
-        Console.ReadLine();
+        TryClearConsole();
+        ShowTitle();
+
+        string playerName =
+            Markup.Escape(player.Name.ToUpperInvariant());
+
+        string winnerText =
+            $"[bold green]🏆 PEMENANG 🏆[/]\n\n" +
+            $"{GetColoredText(player.Color, playerName)}\n" +
+            $"[grey]Semua pion telah mencapai Finish.[/]";
+
+        AnsiConsole.Write(
+            new Panel(new Markup(winnerText))
+                .Header("[bold yellow]GAME OVER[/]")
+                .Border(BoxBorder.Double)
+                .BorderStyle(new Style(SpectreColor.Yellow))
+                .Padding(4, 2, 4, 2));
+
+        AnsiConsole.WriteLine();
+
+        AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("[bold]Permainan selesai.[/]")
+                .HighlightStyle(
+                    new Style(
+                        SpectreColor.Black,
+                        SpectreColor.Green,
+                        Decoration.Bold))
+                .AddChoices("Keluar"));
     }
 }

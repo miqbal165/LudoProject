@@ -9,6 +9,5 @@ public sealed class Pawn(int id, Color color) : IPawn
     public Color Color { get; } = color;
     public PawnStatus Status { get; set; } = PawnStatus.InBase;
     public int StepIndex { get; set; } = -1;
-
     public override string ToString() => $"{Color.ToString()[0]}{Id + 1}";
 }

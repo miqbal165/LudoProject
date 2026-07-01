@@ -2,6 +2,7 @@ using LudoProjects.Controllers;
 using LudoProjects.Enums;
 using LudoProjects.Interfaces;
 using LudoProjects.Models;
+using LudoProjects.Validators;
 
 namespace LudoProjects.Helper;
 
@@ -12,9 +13,7 @@ public static class BoardFactory
         Cell[,] cells,
         Dictionary<IPlayer, List<IPawn>> playerPawns)
     {
-        ArgumentNullException.ThrowIfNull(controller);
-        ArgumentNullException.ThrowIfNull(cells);
-        ArgumentNullException.ThrowIfNull(playerPawns);
+        BoardFactoryValidator.Validate(controller, cells, playerPawns);
 
         InitializeDefaultCells(cells);
         InitializeCenterCells(cells);
@@ -88,11 +87,9 @@ public static class BoardFactory
     {
         foreach (Color color in Enum.GetValues<Color>())
         {
-            Position startPosition =
-                controller.GetStartPosition(color);
+            Position startPosition = controller.GetStartPosition(color);
 
-            cells[startPosition.Row, startPosition.Column] =
-                new Cell(
+            cells[startPosition.Row, startPosition.Column] = new Cell(
                     startPosition,
                     CellType.Start,
                     color,
@@ -126,8 +123,7 @@ public static class BoardFactory
     {
         foreach (Color color in Enum.GetValues<Color>())
         {
-            IReadOnlyList<Position> homeColumnPositions =
-                controller.GetHomeColumnPositions(color);
+            IReadOnlyList<Position> homeColumnPositions = controller.GetHomeColumnPositions(color);
 
             foreach (Position position in homeColumnPositions)
             {
@@ -144,11 +140,9 @@ public static class BoardFactory
         GameController controller,
         Cell[,] cells)
     {
-        Position centerPosition =
-            controller.GetCenterPosition();
+        Position centerPosition = controller.GetCenterPosition();
 
-        cells[centerPosition.Row, centerPosition.Column] =
-            new Cell(
+        cells[centerPosition.Row, centerPosition.Column] = new Cell(
                 centerPosition,
                 CellType.Center,
                 null,
@@ -160,14 +154,12 @@ public static class BoardFactory
         Cell[,] cells,
         Dictionary<IPlayer, List<IPawn>> playerPawns)
     {
-        foreach (KeyValuePair<IPlayer, List<IPawn>> pair
-                 in playerPawns)
+        foreach (KeyValuePair<IPlayer, List<IPawn>> pair in playerPawns)
         {
             IPlayer player = pair.Key;
             List<IPawn> pawns = pair.Value;
 
-            IReadOnlyList<Position> basePositions =
-                controller.GetBasePositions(player.Color);
+            IReadOnlyList<Position> basePositions = controller.GetBasePositions(player.Color);
 
             if (pawns.Count != basePositions.Count)
             {
@@ -182,16 +174,13 @@ public static class BoardFactory
                 IPawn pawn = pawns[index];
                 Position basePosition = basePositions[index];
 
-                Cell baseCell =
-                    cells[basePosition.Row, basePosition.Column];
+                Cell baseCell = cells[basePosition.Row, basePosition.Column];
 
-                List<IPawn> occupyingPawns =
-                    baseCell.OccupyingPawns.ToList();
+                List<IPawn> occupyingPawns = baseCell.OccupyingPawns.ToList();
 
                 occupyingPawns.Add(pawn);
 
-                cells[basePosition.Row, basePosition.Column] =
-                    new Cell(
+                cells[basePosition.Row, basePosition.Column] = new Cell(
                         baseCell.Position,
                         baseCell.Type,
                         baseCell.Color,

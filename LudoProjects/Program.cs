@@ -19,17 +19,14 @@ internal static class Program
     {
         LudoUi.ShowTitle();
 
-        List<IPlayer> players =
-            LudoUi.CreatePlayers();
+        List<IPlayer> players = LudoUi.CreatePlayers();
 
-        Dictionary<IPlayer, List<IPawn>> playerPawns =
-            CreatePlayerPawns(players);
+        Dictionary<IPlayer, List<IPawn>> playerPawns = CreatePlayerPawns(players);
 
         Cell[,] cells = new Cell[15, 15];
         IBoard board = new Board(cells);
 
-        Dictionary<Color, IReadOnlyList<Position>> pathCache =
-            new();
+        Dictionary<Color, IReadOnlyList<Position>> pathCache = new();
 
         IDice dice = new Dice();
         Random randomDiceNumberGenerator = new();
@@ -50,8 +47,7 @@ internal static class Program
         LudoUi.RunGame(controller);
     }
 
-    private static Dictionary<IPlayer, List<IPawn>>
-        CreatePlayerPawns(IEnumerable<IPlayer> players)
+    private static Dictionary<IPlayer, List<IPawn>> CreatePlayerPawns(IEnumerable<IPlayer> players)
     {
         Dictionary<IPlayer, List<IPawn>> playerPawns = new();
 

@@ -29,8 +29,7 @@ public static class GameControllerValidator
                 nameof(players));
         }
 
-        int distinctColorCount =
-            players
+        int distinctColorCount = players
                 .Select(player => player.Color)
                 .Distinct()
                 .Count();
@@ -62,8 +61,7 @@ public static class GameControllerValidator
                     nameof(playerPawns));
             }
 
-            if (pawns.Any(
-                    pawn => pawn.Color != player.Color))
+            if (pawns.Any(pawn => pawn.Color != player.Color))
             {
                 throw new ArgumentException(
                     $"All pawns belonging to " +
@@ -72,8 +70,7 @@ public static class GameControllerValidator
                     nameof(playerPawns));
             }
 
-            int uniquePawnIdCount =
-                pawns
+            int uniquePawnIdCount = pawns
                     .Select(pawn => pawn.Id)
                     .Distinct()
                     .Count();
@@ -87,8 +84,7 @@ public static class GameControllerValidator
             }
         }
 
-        if (board.Cells.GetLength(0) != 15 ||
-            board.Cells.GetLength(1) != 15)
+        if (board.Cells.GetLength(0) != 15 || board.Cells.GetLength(1) != 15)
         {
             throw new ArgumentException(
                 "The Ludo board must have a size of 15 x 15.",

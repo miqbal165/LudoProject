@@ -13,7 +13,6 @@ public sealed class GameController
     private readonly IBoard _board;
     private readonly IDice _dice;
     private readonly Random _randomDiceNumberGenerator;
-
     private int _currentPlayerIndex;
     private bool _extraRollPending;
     private int _consecutiveSixes;
@@ -60,8 +59,7 @@ public sealed class GameController
 
         int totalColors = Enum.GetValues<Color>().Length;
 
-        IReadOnlyList<ICell> startCells =
-            GetCellsByType(CellType.Start);
+        IReadOnlyList<ICell> startCells = GetCellsByType(CellType.Start);
 
         IReadOnlyList<ICell> protectedCells =
             GetCellsByType(CellType.Protected);
@@ -394,8 +392,8 @@ public sealed class GameController
         return _pathCache.TryGetValue(
             color,
             out IReadOnlyList<Position>? path)
-                ? path
-                : Array.Empty<Position>();
+            ? path
+            : Array.Empty<Position>();
     }
 
     private void BuildAllPaths()
@@ -423,14 +421,12 @@ public sealed class GameController
         {
             return Array.Empty<Position>();
         }
-        
+
         path.RemoveAt(path.Count - 1);
 
-        path.AddRange(
-            GetHomeColumnPositions(color));
+        path.AddRange(GetHomeColumnPositions(color));
 
-        path.Add(
-            GetCenterPosition());
+        path.Add(GetCenterPosition());
 
         return path.AsReadOnly();
     }
@@ -455,20 +451,16 @@ public sealed class GameController
             new(6, 0)
         ];
 
-        int startIndex =
-            outerTrack.IndexOf(startFrom);
+        int startIndex = outerTrack.IndexOf(startFrom);
 
         if (startIndex < 0)
         {
             yield break;
         }
 
-        for (int offset = 0;
-             offset < outerTrack.Count;
-             offset++)
+        for (int offset = 0; offset < outerTrack.Count; offset++)
         {
-            yield return outerTrack[
-                (startIndex + offset) % outerTrack.Count];
+            yield return outerTrack[(startIndex + offset) % outerTrack.Count];
         }
     }
 
@@ -477,23 +469,18 @@ public sealed class GameController
         _extraRollPending = false;
         _consecutiveSixes = 0;
         _currentPhase = TurnPhase.Rolling;
-
         do
         {
-            _currentPlayerIndex =
-                (_currentPlayerIndex + 1) % _players.Count;
-        }
-        while (_players[_currentPlayerIndex].IsFinished);
+            _currentPlayerIndex = (_currentPlayerIndex + 1) % _players.Count;
+        } while (_players[_currentPlayerIndex].IsFinished);
     }
 
     private void CheckWinCondition()
     {
-        IPlayer currentPlayer =
-            GetCurrentPlayer();
+        IPlayer currentPlayer = GetCurrentPlayer();
 
         if (_playerPawns[currentPlayer]
-            .Any(pawn =>
-                pawn.Status != PawnStatus.Finished))
+            .Any(pawn => pawn.Status != PawnStatus.Finished))
         {
             return;
         }
@@ -518,8 +505,7 @@ public sealed class GameController
     {
         if (pawn.Status == PawnStatus.InBase)
         {
-            IReadOnlyList<Position> basePositions =
-                GetBasePositions(pawn.Color);
+            IReadOnlyList<Position> basePositions = GetBasePositions(pawn.Color);
 
             return pawn.Id >= 0 &&
                    pawn.Id < basePositions.Count
@@ -532,8 +518,7 @@ public sealed class GameController
             return GetCenterPosition();
         }
 
-        IReadOnlyList<Position> path =
-            GetFullPath(pawn.Color);
+        IReadOnlyList<Position> path = GetFullPath(pawn.Color);
 
         return pawn.StepIndex >= 0 &&
                pawn.StepIndex < path.Count
@@ -552,8 +537,7 @@ public sealed class GameController
 
         List<IPawn> capturedPawns =
             cell.OccupyingPawns
-                .Where(pawn =>
-                    pawn.Color != attackerColor)
+                .Where(pawn => pawn.Color != attackerColor)
                 .ToList();
 
         foreach (IPawn capturedPawn in capturedPawns)
@@ -576,8 +560,7 @@ public sealed class GameController
             return false;
         }
 
-        IReadOnlyList<Position> path =
-            GetFullPath(pawn.Color);
+        IReadOnlyList<Position> path = GetFullPath(pawn.Color);
 
         if (path.Count == 0)
         {
@@ -598,11 +581,9 @@ public sealed class GameController
                 pawn.Color);
         }
 
-        int targetIndex =
-            pawn.StepIndex + steps;
+        int targetIndex = pawn.StepIndex + steps;
 
-        if (targetIndex < 0 ||
-            targetIndex >= path.Count)
+        if (targetIndex < 0 || targetIndex >= path.Count)
         {
             return false;
         }
@@ -626,8 +607,7 @@ public sealed class GameController
         Position targetPosition,
         Color color)
     {
-        ICell cell =
-            GetCell(targetPosition);
+        ICell cell = GetCell(targetPosition);
 
         if (cell.Type != CellType.Normal)
         {
@@ -644,21 +624,18 @@ public sealed class GameController
         IPawn pawn,
         int steps)
     {
-        IReadOnlyList<Position> path =
-            GetFullPath(pawn.Color);
+        IReadOnlyList<Position> path = GetFullPath(pawn.Color);
 
         if (path.Count == 0)
         {
             return;
         }
 
-        int targetIndex =
-            pawn.Status == PawnStatus.InBase
+        int targetIndex = pawn.Status == PawnStatus.InBase
                 ? 0
                 : pawn.StepIndex + steps;
 
-        if (targetIndex < 0 ||
-            targetIndex >= path.Count)
+        if (targetIndex < 0 || targetIndex >= path.Count)
         {
             return;
         }
@@ -667,14 +644,11 @@ public sealed class GameController
 
         pawn.StepIndex = targetIndex;
 
-        int finishIndex =
-            path.Count - 1;
+        int finishIndex = path.Count - 1;
 
-        int homeColumnCount =
-            GetHomeColumnPositions(pawn.Color).Count;
+        int homeColumnCount = GetHomeColumnPositions(pawn.Color).Count;
 
-        int homeColumnStartIndex =
-            finishIndex - homeColumnCount;
+        int homeColumnStartIndex = finishIndex - homeColumnCount;
 
         if (pawn.StepIndex == finishIndex)
         {
@@ -689,11 +663,9 @@ public sealed class GameController
             pawn.Status = PawnStatus.OnBoard;
         }
 
-        Position targetPosition =
-            path[pawn.StepIndex];
+        Position targetPosition = path[pawn.StepIndex];
 
-        ICell targetCell =
-            GetCell(targetPosition);
+        ICell targetCell = GetCell(targetPosition);
 
         CheckAndHandleCapture(
             targetCell,
@@ -704,11 +676,8 @@ public sealed class GameController
 
     private int PerformRoll()
     {
-        int value =
-            _randomDiceNumberGenerator.Next(1, 7);
-
+        int value = _randomDiceNumberGenerator.Next(1, 7);
         _dice.CurrentValue = value;
-
         return value;
     }
 
@@ -720,14 +689,11 @@ public sealed class GameController
 
     private void AddPawn(IPawn pawn)
     {
-        Position position =
-            GetCurrentPosition(pawn);
+        Position position = GetCurrentPosition(pawn);
 
-        ICell currentCell =
-            GetCell(position);
+        ICell currentCell = GetCell(position);
 
-        List<IPawn> pawns =
-            currentCell.OccupyingPawns.ToList();
+        List<IPawn> pawns = currentCell.OccupyingPawns.ToList();
 
         if (!pawns.Contains(pawn))
         {
@@ -737,31 +703,28 @@ public sealed class GameController
         _board.Cells[
             position.Row,
             position.Column] = new Cell(
-                currentCell.Position,
-                currentCell.Type,
-                currentCell.Color,
-                pawns.AsReadOnly());
+            currentCell.Position,
+            currentCell.Type,
+            currentCell.Color,
+            pawns.AsReadOnly());
     }
 
     private void RemovePawn(IPawn pawn)
     {
-        Position position =
-            GetCurrentPosition(pawn);
+        Position position = GetCurrentPosition(pawn);
 
-        ICell currentCell =
-            GetCell(position);
+        ICell currentCell = GetCell(position);
 
-        List<IPawn> pawns =
-            currentCell.OccupyingPawns.ToList();
+        List<IPawn> pawns = currentCell.OccupyingPawns.ToList();
 
         pawns.Remove(pawn);
 
         _board.Cells[
             position.Row,
             position.Column] = new Cell(
-                currentCell.Position,
-                currentCell.Type,
-                currentCell.Color,
-                pawns.AsReadOnly());
+            currentCell.Position,
+            currentCell.Type,
+            currentCell.Color,
+            pawns.AsReadOnly());
     }
 }
