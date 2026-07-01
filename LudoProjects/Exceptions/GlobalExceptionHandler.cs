@@ -6,9 +6,7 @@ public static class GlobalExceptionHandler
     {
         if (application is null)
         {
-            ShowError(
-                "Aplikasi tidak dapat dijalankan karena action tidak tersedia.");
-
+            ShowError("Aplikasi tidak dapat dijalankan karena action tidak tersedia.");
             return;
         }
 
@@ -18,39 +16,27 @@ public static class GlobalExceptionHandler
         }
         catch (ArgumentNullException exception)
         {
-            ShowError(
-                "Data yang dibutuhkan belum tersedia.",
-                exception);
+            ShowError("Data yang dibutuhkan belum tersedia.", exception);
         }
         catch (ArgumentOutOfRangeException exception)
         {
-            ShowError(
-                "Nilai yang diberikan berada di luar batas yang diperbolehkan.",
-                exception);
+            ShowError("Nilai yang diberikan berada di luar batas yang diperbolehkan.", exception);
         }
         catch (ArgumentException exception)
         {
-            ShowError(
-                exception.Message,
-                exception);
+            ShowError(exception.Message, exception);
         }
         catch (InvalidOperationException exception)
         {
-            ShowError(
-                exception.Message,
-                exception);
+            ShowError(exception.Message, exception);
         }
         catch (Exception exception)
         {
-            ShowError(
-                "Terjadi kesalahan yang tidak terduga pada permainan.",
-                exception);
+            ShowError("Terjadi kesalahan yang tidak terduga pada permainan.", exception);
         }
     }
 
-    private static void ShowError(
-        string userMessage,
-        Exception? exception = null)
+    private static void ShowError(string userMessage, Exception? exception = null)
     {
         Console.ResetColor();
         Console.ForegroundColor = ConsoleColor.Red;

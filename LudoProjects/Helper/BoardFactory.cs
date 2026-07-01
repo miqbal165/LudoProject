@@ -117,9 +117,7 @@ public static class BoardFactory
         }
     }
 
-    private static void InitializeHomeColumnCells(
-        GameController controller,
-        Cell[,] cells)
+    private static void InitializeHomeColumnCells(GameController controller, Cell[,] cells)
     {
         foreach (Color color in Enum.GetValues<Color>())
         {
@@ -136,9 +134,7 @@ public static class BoardFactory
         }
     }
 
-    private static void InitializeCenterFinishCell(
-        GameController controller,
-        Cell[,] cells)
+    private static void InitializeCenterFinishCell(GameController controller, Cell[,] cells)
     {
         Position centerPosition = controller.GetCenterPosition();
 
@@ -149,10 +145,7 @@ public static class BoardFactory
                 Array.Empty<IPawn>());
     }
 
-    private static void PlacePawnsInBase(
-        GameController controller,
-        Cell[,] cells,
-        Dictionary<IPlayer, List<IPawn>> playerPawns)
+    private static void PlacePawnsInBase(GameController controller, Cell[,] cells, Dictionary<IPlayer, List<IPawn>> playerPawns)
     {
         foreach (KeyValuePair<IPlayer, List<IPawn>> pair in playerPawns)
         {

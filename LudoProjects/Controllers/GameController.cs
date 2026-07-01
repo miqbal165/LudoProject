@@ -43,7 +43,6 @@ public sealed class GameController
         _board = board;
         _dice = dice;
         _randomDiceNumberGenerator = randomDiceNumberGenerator;
-
         _currentPlayerIndex = 0;
         _extraRollPending = false;
         _consecutiveSixes = 0;
@@ -61,20 +60,16 @@ public sealed class GameController
 
         IReadOnlyList<ICell> startCells = GetCellsByType(CellType.Start);
 
-        IReadOnlyList<ICell> protectedCells =
-            GetCellsByType(CellType.Protected);
+        IReadOnlyList<ICell> protectedCells = GetCellsByType(CellType.Protected);
 
-        IReadOnlyList<ICell> homeColumnCells =
-            GetCellsByType(CellType.HomeColumn);
+        IReadOnlyList<ICell> homeColumnCells = GetCellsByType(CellType.HomeColumn);
 
-        IReadOnlyList<ICell> centerCells =
-            GetCellsByType(CellType.Center);
+        IReadOnlyList<ICell> centerCells = GetCellsByType(CellType.Center);
 
-        bool boardIsReady =
-            startCells.Count == totalColors &&
-            protectedCells.Count == totalColors &&
-            homeColumnCells.Count == totalColors * 5 &&
-            centerCells.Count == 9;
+        bool boardIsReady = startCells.Count == totalColors &&
+                            protectedCells.Count == totalColors &&
+                            homeColumnCells.Count == totalColors * 5 &&
+                            centerCells.Count == 9;
 
         if (!boardIsReady)
         {
@@ -134,11 +129,9 @@ public sealed class GameController
         }
         else
         {
-            List<IPawn> currentPawns =
-                _playerPawns[GetCurrentPlayer()];
+            List<IPawn> currentPawns = _playerPawns[GetCurrentPlayer()];
 
-            bool allPawnsInBase = currentPawns.All(
-                pawn => pawn.Status == PawnStatus.InBase);
+            bool allPawnsInBase = currentPawns.All(pawn => pawn.Status == PawnStatus.InBase);
 
             if (allPawnsInBase || movablePawns.Count == 1)
             {
@@ -261,9 +254,7 @@ public sealed class GameController
 
     public ICell GetCell(Position position)
     {
-        return BoardValidator.GetRequiredCell(
-            _board,
-            position);
+        return BoardValidator.GetRequiredCell(_board, position);
     }
 
     public IReadOnlyList<ICell> GetCellsByType(CellType type)
@@ -335,8 +326,7 @@ public sealed class GameController
         return Array.AsReadOnly(positions);
     }
 
-    public IReadOnlyList<Position> GetHomeColumnPositions(
-        Color color)
+    public IReadOnlyList<Position> GetHomeColumnPositions(Color color)
     {
         Position[] positions = color switch
         {
@@ -389,19 +379,16 @@ public sealed class GameController
 
     public IReadOnlyList<Position> GetFullPath(Color color)
     {
-        return _pathCache.TryGetValue(
-            color,
-            out IReadOnlyList<Position>? path)
+        return _pathCache.TryGetValue(color, out IReadOnlyList<Position>? path)
             ? path
             : Array.Empty<Position>();
     }
-
+    
     private void BuildAllPaths()
     {
         foreach (Color color in Enum.GetValues<Color>())
         {
-            IReadOnlyList<Position> path =
-                BuildPathForColor(color);
+            IReadOnlyList<Position> path = BuildPathForColor(color);
 
             if (path.Count > 0)
             {
@@ -410,12 +397,9 @@ public sealed class GameController
         }
     }
 
-    private IReadOnlyList<Position> BuildPathForColor(
-        Color color)
+    private IReadOnlyList<Position> BuildPathForColor(Color color)
     {
-        List<Position> path = GetClockwiseOuterTrack(
-            GetStartPosition(color)
-        ).ToList();
+        List<Position> path = GetClockwiseOuterTrack(GetStartPosition(color)).ToList();
 
         if (path.Count == 0)
         {
@@ -431,8 +415,7 @@ public sealed class GameController
         return path.AsReadOnly();
     }
 
-    private IEnumerable<Position> GetClockwiseOuterTrack(
-        Position startFrom)
+    private IEnumerable<Position> GetClockwiseOuterTrack(Position startFrom)
     {
         List<Position> outerTrack =
         [
@@ -526,9 +509,7 @@ public sealed class GameController
             : default;
     }
 
-    private void CheckAndHandleCapture(
-        ICell cell,
-        Color attackerColor)
+    private void CheckAndHandleCapture(ICell cell, Color attackerColor)
     {
         if (cell.Type != CellType.Normal)
         {
@@ -546,9 +527,7 @@ public sealed class GameController
         }
     }
 
-    private bool IsValidMove(
-        IPawn pawn,
-        int steps)
+    private bool IsValidMove(IPawn pawn, int steps)
     {
         if (steps is < 1 or > 6)
         {
@@ -603,9 +582,7 @@ public sealed class GameController
         return true;
     }
 
-    private bool IsPathBlocked(
-        Position targetPosition,
-        Color color)
+    private bool IsPathBlocked(Position targetPosition, Color color)
     {
         ICell cell = GetCell(targetPosition);
 
@@ -620,9 +597,7 @@ public sealed class GameController
             .Any(group => group.Count() >= 2);
     }
 
-    private void MovePawnAlongPath(
-        IPawn pawn,
-        int steps)
+    private void MovePawnAlongPath(IPawn pawn, int steps)
     {
         IReadOnlyList<Position> path = GetFullPath(pawn.Color);
 
