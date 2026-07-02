@@ -5,6 +5,7 @@ using LudoProjects.Helper;
 using LudoProjects.Interfaces;
 using LudoProjects.Models;
 using LudoProjects.Views;
+using Serilog;
 
 namespace LudoProjects;
 
@@ -12,10 +13,33 @@ internal static class Program
 {
     public static void Main()
     {
-        GlobalExceptionHandler.Run(RunApplication);
+        Logger.ConfigureLogging();
+        RunApp(PlayGames);
     }
 
-    private static void RunApplication()
+    private static void RunApp(Action playGames)
+    {
+        try
+        {
+            Log.Information("Ludo application started");
+            GlobalExceptionHandler.Run(playGames);
+        }
+        catch (Exception exception)
+        {
+            Log.Fatal(
+                exception,
+                "Ludo application terminated unexpectedly. " +
+                "ExceptionType={ExceptionType}",
+                exception.GetType().Name);
+        }
+        finally
+        {
+            Log.Information("Ludo application stopped");
+            Log.CloseAndFlush();
+        }
+    }
+
+    private static void PlayGames()
     {
         LudoUi.ShowTitle();
 

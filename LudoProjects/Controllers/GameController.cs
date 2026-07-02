@@ -2,6 +2,7 @@ using LudoProjects.Enums;
 using LudoProjects.Interfaces;
 using LudoProjects.Models;
 using LudoProjects.Validators;
+using Serilog;
 
 namespace LudoProjects.Controllers;
 
@@ -13,6 +14,7 @@ public sealed class GameController
     private readonly IBoard _board;
     private readonly IDice _dice;
     private readonly Random _randomDiceNumberGenerator;
+    private readonly ILogger _logger;
     private int _currentPlayerIndex;
     private bool _extraRollPending;
     private int _consecutiveSixes;
@@ -27,7 +29,8 @@ public sealed class GameController
         Dictionary<Color, IReadOnlyList<Position>> pathCache,
         IBoard board,
         IDice dice,
-        Random randomDiceNumberGenerator)
+        Random randomDiceNumberGenerator,
+        ILogger? logger = null)
     {
         GameControllerValidator.ValidateConstructorArguments(
             players,
@@ -43,27 +46,32 @@ public sealed class GameController
         _board = board;
         _dice = dice;
         _randomDiceNumberGenerator = randomDiceNumberGenerator;
+        _logger = (logger ?? Log.Logger).ForContext<GameController>();
         _currentPlayerIndex = 0;
         _extraRollPending = false;
         _consecutiveSixes = 0;
         _currentPhase = TurnPhase.WaitingToStart;
+
+        _logger.Debug(
+            "Game controller initialized with {PlayerCount} players",
+            _players.Count);
     }
 
     public void StartGame()
     {
         if (_currentPhase != TurnPhase.WaitingToStart)
         {
+            _logger.Warning(
+                "Game start ignored because current phase is {CurrentPhase}",
+                _currentPhase);
             return;
         }
 
         int totalColors = Enum.GetValues<Color>().Length;
 
         IReadOnlyList<ICell> startCells = GetCellsByType(CellType.Start);
-
         IReadOnlyList<ICell> protectedCells = GetCellsByType(CellType.Protected);
-
         IReadOnlyList<ICell> homeColumnCells = GetCellsByType(CellType.HomeColumn);
-
         IReadOnlyList<ICell> centerCells = GetCellsByType(CellType.Center);
 
         bool boardIsReady = startCells.Count == totalColors &&
@@ -73,12 +81,23 @@ public sealed class GameController
 
         if (!boardIsReady)
         {
+            _logger.Warning(
+                "Game start rejected because the board is not ready. " +
+                "StartCells={StartCellCount}, ProtectedCells={ProtectedCellCount}, " +
+                "HomeColumnCells={HomeColumnCellCount}, CenterCells={CenterCellCount}",
+                startCells.Count,
+                protectedCells.Count,
+                homeColumnCells.Count,
+                centerCells.Count);
             return;
         }
 
         if (_pathCache.Count == 0)
         {
             BuildAllPaths();
+            _logger.Debug(
+                "Movement paths built for {PathColorCount} colors",
+                _pathCache.Count);
         }
 
         _currentPlayerIndex = 0;
@@ -87,6 +106,15 @@ public sealed class GameController
         _dice.CurrentValue = 0;
         _currentPhase = TurnPhase.Rolling;
 
+        IPlayer currentPlayer = GetCurrentPlayer();
+
+        _logger.Information(
+            "Game started with {PlayerCount} players. " +
+            "First player is {CurrentPlayerName} ({CurrentPlayerColor})",
+            _players.Count,
+            currentPlayer.Name,
+            currentPlayer.Color);
+
         BroadcastState();
     }
 
@@ -94,17 +122,36 @@ public sealed class GameController
     {
         if (!CanRoll())
         {
+            _logger.Warning(
+                "Dice roll ignored because current phase is {CurrentPhase}",
+                _currentPhase);
             return;
         }
 
+        IPlayer rollingPlayer = GetCurrentPlayer();
         int rolledValue = PerformRoll();
 
         _consecutiveSixes = rolledValue == 6
             ? _consecutiveSixes + 1
             : 0;
 
+        _logger.Information(
+            "Player {PlayerName} ({PlayerColor}) rolled {DiceValue}. " +
+            "ConsecutiveSixes={ConsecutiveSixes}",
+            rollingPlayer.Name,
+            rollingPlayer.Color,
+            rolledValue,
+            _consecutiveSixes);
+
         if (_consecutiveSixes == 3)
         {
+            _logger.Warning(
+                "Turn forfeited for {PlayerName} ({PlayerColor}) after " +
+                "{ConsecutiveSixes} consecutive sixes",
+                rollingPlayer.Name,
+                rollingPlayer.Color,
+                _consecutiveSixes);
+
             _extraRollPending = false;
             NextTurn();
             BroadcastState();
@@ -118,6 +165,13 @@ public sealed class GameController
 
         if (movablePawns.Count == 0)
         {
+            _logger.Information(
+                "Player {PlayerName} has no movable pawn for dice value {DiceValue}. " +
+                "ExtraRollPending={ExtraRollPending}",
+                rollingPlayer.Name,
+                rolledValue,
+                _extraRollPending);
+
             if (_extraRollPending)
             {
                 _currentPhase = TurnPhase.Rolling;
@@ -131,13 +185,21 @@ public sealed class GameController
         {
             List<IPawn> currentPawns = _playerPawns[GetCurrentPlayer()];
 
-            bool allPawnsInBase = currentPawns.All(pawn => pawn.Status == PawnStatus.InBase);
+            bool allPawnsInBase = currentPawns.All(
+                pawn => pawn.Status == PawnStatus.InBase);
 
             if (allPawnsInBase || movablePawns.Count == 1)
             {
                 IPawn automaticPawn = movablePawns
                     .OrderBy(pawn => pawn.Id)
                     .First();
+
+                _logger.Information(
+                    "Pawn {PawnId} of {PawnColor} selected automatically. " +
+                    "MovablePawnCount={MovablePawnCount}",
+                    automaticPawn.Id,
+                    automaticPawn.Color,
+                    movablePawns.Count);
 
                 MovePawnAlongPath(
                     automaticPawn,
@@ -157,6 +219,14 @@ public sealed class GameController
                     }
                 }
             }
+            else
+            {
+                _logger.Information(
+                    "Waiting for player {PlayerName} to select one of " +
+                    "{MovablePawnCount} movable pawns",
+                    rollingPlayer.Name,
+                    movablePawns.Count);
+            }
         }
 
         BroadcastState();
@@ -166,16 +236,34 @@ public sealed class GameController
     {
         if (_currentPhase != TurnPhase.SelectingPawn)
         {
+            _logger.Warning(
+                "Pawn selection ignored. PawnId={PawnId}, CurrentPhase={CurrentPhase}",
+                pawnId,
+                _currentPhase);
             return;
         }
+
+        IPlayer currentPlayer = GetCurrentPlayer();
 
         IPawn? selectedPawn = GetMovablePawns()
             .FirstOrDefault(pawn => pawn.Id == pawnId);
 
         if (selectedPawn is null)
         {
+            _logger.Warning(
+                "Invalid pawn selection by {PlayerName}. " +
+                "PawnId={PawnId}, DiceValue={DiceValue}",
+                currentPlayer.Name,
+                pawnId,
+                _dice.CurrentValue);
             return;
         }
+
+        _logger.Information(
+            "Player {PlayerName} selected pawn {PawnId} of {PawnColor}",
+            currentPlayer.Name,
+            selectedPawn.Id,
+            selectedPawn.Color);
 
         MovePawnAlongPath(
             selectedPawn,
@@ -449,13 +537,26 @@ public sealed class GameController
 
     private void NextTurn()
     {
+        IPlayer previousPlayer = GetCurrentPlayer();
+
         _extraRollPending = false;
         _consecutiveSixes = 0;
         _currentPhase = TurnPhase.Rolling;
+
         do
         {
             _currentPlayerIndex = (_currentPlayerIndex + 1) % _players.Count;
         } while (_players[_currentPlayerIndex].IsFinished);
+
+        IPlayer currentPlayer = GetCurrentPlayer();
+
+        _logger.Information(
+            "Turn changed from {PreviousPlayerName} ({PreviousPlayerColor}) " +
+            "to {CurrentPlayerName} ({CurrentPlayerColor})",
+            previousPlayer.Name,
+            previousPlayer.Color,
+            currentPlayer.Name,
+            currentPlayer.Color);
     }
 
     private void CheckWinCondition()
@@ -471,10 +572,18 @@ public sealed class GameController
         currentPlayer.IsFinished = true;
         _currentPhase = TurnPhase.GameOver;
 
+        _logger.Information(
+            "Player {PlayerName} ({PlayerColor}) won the game",
+            currentPlayer.Name,
+            currentPlayer.Color);
+
         OnPlayerWon?.Invoke(currentPlayer);
     }
 
-    private void HandleCapture(IPawn target)
+    private void HandleCapture(
+        IPawn target,
+        Color attackerColor,
+        Position capturePosition)
     {
         RemovePawn(target);
 
@@ -482,6 +591,14 @@ public sealed class GameController
         target.StepIndex = -1;
 
         AddPawn(target);
+
+        _logger.Information(
+            "Pawn {CapturedPawnId} of {CapturedPawnColor} was captured by " +
+            "{AttackerColor} at {@CapturePosition}",
+            target.Id,
+            target.Color,
+            attackerColor,
+            capturePosition);
     }
 
     private Position GetCurrentPosition(IPawn pawn)
@@ -523,7 +640,10 @@ public sealed class GameController
 
         foreach (IPawn capturedPawn in capturedPawns)
         {
-            HandleCapture(capturedPawn);
+            HandleCapture(
+                capturedPawn,
+                attackerColor,
+                cell.Position);
         }
     }
 
@@ -603,8 +723,15 @@ public sealed class GameController
 
         if (path.Count == 0)
         {
+            _logger.Warning(
+                "Pawn move rejected because path is unavailable. " +
+                "PawnId={PawnId}, PawnColor={PawnColor}",
+                pawn.Id,
+                pawn.Color);
             return;
         }
+
+        Position fromPosition = GetCurrentPosition(pawn);
 
         int targetIndex = pawn.Status == PawnStatus.InBase
                 ? 0
@@ -612,6 +739,16 @@ public sealed class GameController
 
         if (targetIndex < 0 || targetIndex >= path.Count)
         {
+            _logger.Warning(
+                "Pawn move rejected because target index is invalid. " +
+                "PawnId={PawnId}, PawnColor={PawnColor}, " +
+                "CurrentStepIndex={CurrentStepIndex}, Steps={Steps}, " +
+                "TargetStepIndex={TargetStepIndex}",
+                pawn.Id,
+                pawn.Color,
+                pawn.StepIndex,
+                steps,
+                targetIndex);
             return;
         }
 
@@ -620,9 +757,7 @@ public sealed class GameController
         pawn.StepIndex = targetIndex;
 
         int finishIndex = path.Count - 1;
-
         int homeColumnCount = GetHomeColumnPositions(pawn.Color).Count;
-
         int homeColumnStartIndex = finishIndex - homeColumnCount;
 
         if (pawn.StepIndex == finishIndex)
@@ -639,7 +774,6 @@ public sealed class GameController
         }
 
         Position targetPosition = path[pawn.StepIndex];
-
         ICell targetCell = GetCell(targetPosition);
 
         CheckAndHandleCapture(
@@ -647,6 +781,18 @@ public sealed class GameController
             pawn.Color);
 
         AddPawn(pawn);
+
+        _logger.Information(
+            "Pawn {PawnId} of {PawnColor} moved from {@FromPosition} " +
+            "to {@ToPosition} by {Steps} steps. " +
+            "StepIndex={StepIndex}, PawnStatus={PawnStatus}",
+            pawn.Id,
+            pawn.Color,
+            fromPosition,
+            targetPosition,
+            steps,
+            pawn.StepIndex,
+            pawn.Status);
     }
 
     private int PerformRoll()
@@ -658,8 +804,18 @@ public sealed class GameController
 
     private void BroadcastState()
     {
-        OnStateChanged?.Invoke(
-            GetGameState());
+        GameState state = GetGameState();
+
+        _logger.Debug(
+            "Broadcasting game state. Phase={CurrentPhase}, " +
+            "CurrentPlayer={CurrentPlayerName}, DiceValue={DiceValue}, " +
+            "MovablePawnCount={MovablePawnCount}",
+            state.Phase,
+            state.CurrentPlayer.Name,
+            state.LastDiceValue,
+            state.MovablePawns.Count);
+
+        OnStateChanged?.Invoke(state);
     }
 
     private void AddPawn(IPawn pawn)

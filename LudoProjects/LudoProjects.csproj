@@ -8,6 +8,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Serilog" Version="4.4.0-dev-02437" />
+      <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+      <PackageReference Include="Serilog.Sinks.File" Version="8.0.0-nblumhardt-02322" />
       <PackageReference Include="Spectre.Console" Version="0.54.0" />
     </ItemGroup>
 

@@ -8,10 +8,7 @@ namespace LudoProjects.Helper;
 
 public static class BoardFactory
 {
-    public static void InitializeCells(
-        GameController controller,
-        Cell[,] cells,
-        Dictionary<IPlayer, List<IPawn>> playerPawns)
+    public static void InitializeCells(GameController controller, Cell[,] cells, Dictionary<IPlayer, List<IPawn>> playerPawns)
     {
         BoardFactoryValidator.Validate(controller, cells, playerPawns);
 
@@ -81,9 +78,7 @@ public static class BoardFactory
         }
     }
 
-    private static void InitializeStartCells(
-        GameController controller,
-        Cell[,] cells)
+    private static void InitializeStartCells(GameController controller, Cell[,] cells)
     {
         foreach (Color color in Enum.GetValues<Color>())
         {
@@ -99,8 +94,7 @@ public static class BoardFactory
 
     private static void InitializeProtectedCells(Cell[,] cells)
     {
-        Position[] protectedPositions =
-        [
+        Position[] protectedPositions = [
             new Position(2, 6),
             new Position(6, 12),
             new Position(12, 8),

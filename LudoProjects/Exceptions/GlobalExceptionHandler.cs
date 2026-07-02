@@ -1,3 +1,5 @@
+using Serilog;
+
 namespace LudoProjects.Exceptions;
 
 public static class GlobalExceptionHandler
@@ -6,6 +8,10 @@ public static class GlobalExceptionHandler
     {
         if (application is null)
         {
+            Log.Warning(
+                "Application execution skipped because {Reason}",
+                "Application action was null");
+
             ShowError("Aplikasi tidak dapat dijalankan karena action tidak tersedia.");
             return;
         }
@@ -20,7 +26,9 @@ public static class GlobalExceptionHandler
         }
         catch (ArgumentOutOfRangeException exception)
         {
-            ShowError("Nilai yang diberikan berada di luar batas yang diperbolehkan.", exception);
+            ShowError(
+                "Nilai yang diberikan berada di luar batas yang diperbolehkan.",
+                exception);
         }
         catch (ArgumentException exception)
         {
@@ -38,6 +46,23 @@ public static class GlobalExceptionHandler
 
     private static void ShowError(string userMessage, Exception? exception = null)
     {
+        if (exception is null)
+        {
+            Log.Warning(
+                "Game error displayed without an exception. " +
+                "UserMessage={UserMessage}",
+                userMessage);
+        }
+        else
+        {
+            Log.Error(
+                exception,
+                "Game operation failed. UserMessage={UserMessage}, " +
+                "ExceptionType={ExceptionType}",
+                userMessage,
+                exception.GetType().Name);
+        }
+
         Console.ResetColor();
         Console.ForegroundColor = ConsoleColor.Red;
 
