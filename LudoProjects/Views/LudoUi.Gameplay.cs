@@ -326,14 +326,12 @@ public static partial class LudoUi
 
         if (targetIndex >= homeColumnStartIndex)
         {
-            return
-                $"{GetPawnLabel(pawn)} maju {diceValue} langkah " +
-                $"ke Home Column ({target.Row},{target.Column})";
+            return $"{GetPawnLabel(pawn)} maju {diceValue} langkah " +
+                   $"ke Home Column ({target.Row},{target.Column})";
         }
 
-        return
-            $"{GetPawnLabel(pawn)} maju {diceValue} langkah " +
-            $"ke cell ({target.Row},{target.Column})";
+        return $"{GetPawnLabel(pawn)} maju {diceValue} langkah " +
+               $"ke cell ({target.Row},{target.Column})";
     }
 
     private static void ShowWinner(IPlayer player)
@@ -341,13 +339,11 @@ public static partial class LudoUi
         TryClearConsole();
         ShowTitle();
 
-        string playerName =
-            Markup.Escape(player.Name.ToUpperInvariant());
+        string playerName = Markup.Escape(player.Name.ToUpperInvariant());
 
-        string winnerText =
-            $"[bold green]🏆 PEMENANG 🏆[/]\n\n" +
-            $"{GetColoredText(player.Color, playerName)}\n" +
-            $"[grey]Semua pion telah mencapai Finish.[/]";
+        string winnerText = $"[bold green]🏆 PEMENANG 🏆[/]\n\n" +
+                            $"{GetColoredText(player.Color, playerName)}\n" +
+                            $"[grey]Semua pion telah mencapai Finish.[/]";
 
         AnsiConsole.Write(
             new Panel(new Markup(winnerText))
