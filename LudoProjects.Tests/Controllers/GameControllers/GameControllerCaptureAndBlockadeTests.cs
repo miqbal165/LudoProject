@@ -121,10 +121,13 @@ public class GameControllerCaptureAndBlockadeTests : GameControllerTestBase
         IPawn redPawn = context.PlayerPawns[context.Players[0]][0];
         IPawn bluePawn = context.PlayerPawns[context.Players[1]][0];
         IPawn greenPawn = context.PlayerPawns[context.Players[2]][0];
+
         IReadOnlyList<Position> redPath = context.Controller.GetFullPath(Color.Red);
         Position target = redPath[2];
+        
         int blueIndex = context.Controller.GetFullPath(Color.Blue).ToList().IndexOf(target);
         int greenIndex = context.Controller.GetFullPath(Color.Green).ToList().IndexOf(target);
+        
         PlacePawn(context, redPawn, PawnStatus.OnBoard, 0);
         PlacePawn(context, bluePawn, PawnStatus.OnBoard, blueIndex);
         PlacePawn(context, greenPawn, PawnStatus.OnBoard, greenIndex);
