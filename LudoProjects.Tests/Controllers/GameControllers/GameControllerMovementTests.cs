@@ -3,17 +3,16 @@ using LudoProjects.Interfaces;
 using LudoProjects.Models;
 using LudoProjects.Tests.Builders;
 using LudoProjects.Tests.TestSupport;
-using NUnit.Framework;
 
 namespace LudoProjects.Tests.Controllers.GameControllers;
 
 [TestFixture]
-public sealed class GameControllerMovementTests : GameControllerTestBase
+public class GameControllerMovementTests : GameControllerTestBase
 {
     [Test]
     public void MovePawn_WhenEnteringHomeColumn_UpdatesPawnStatus()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(1)
             .Build();
         context.Controller.StartGame();
@@ -32,7 +31,7 @@ public sealed class GameControllerMovementTests : GameControllerTestBase
     [Test]
     public void MovePawn_WhenReachingCenter_MarksPawnAsFinished()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(1)
             .Build();
         context.Controller.StartGame();
@@ -53,7 +52,7 @@ public sealed class GameControllerMovementTests : GameControllerTestBase
     [Test]
     public void MovePawn_WhenDiceWouldOvershootCenter_DoesNotMovePawn()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(2)
             .Build();
         context.Controller.StartGame();
@@ -76,7 +75,7 @@ public sealed class GameControllerMovementTests : GameControllerTestBase
     [Test]
     public void MovePawn_WhenSingleOpponentIsOnIntermediateCell_CanPassIt()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(3)
             .Build();
         context.Controller.StartGame();
@@ -102,7 +101,7 @@ public sealed class GameControllerMovementTests : GameControllerTestBase
     [Test]
     public void MovePawn_WhenFriendlyPawnsShareIntermediateCell_IsNotBlocked()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(3)
             .Build();
         context.Controller.StartGame();
@@ -120,7 +119,7 @@ public sealed class GameControllerMovementTests : GameControllerTestBase
     [Test]
     public void GetMovablePawns_DoesNotIncludeFinishedOrOvershootingPawns()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(2)
             .Build();
         context.Controller.StartGame();

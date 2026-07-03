@@ -1,13 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "7d9Beed6mM8=",
+  "dgSpecHash": "bvhbZKKq+o4=",
   "success": true,
-  "projectFilePath": "C:\\Users\\miqba\\RiderProjects\\LudoProject\\LudoProjects\\LudoProjects.csproj",
+  "projectFilePath": "C:\\Users\\Iqbal\\RiderProjects\\LudoProject\\LudoProjects\\LudoProjects.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\miqba\\.nuget\\packages\\serilog\\4.4.0-dev-02437\\serilog.4.4.0-dev-02437.nupkg.sha512",
-    "C:\\Users\\miqba\\.nuget\\packages\\serilog.sinks.console\\6.1.1\\serilog.sinks.console.6.1.1.nupkg.sha512",
-    "C:\\Users\\miqba\\.nuget\\packages\\serilog.sinks.file\\8.0.0-nblumhardt-02322\\serilog.sinks.file.8.0.0-nblumhardt-02322.nupkg.sha512",
-    "C:\\Users\\miqba\\.nuget\\packages\\spectre.console\\0.54.0\\spectre.console.0.54.0.nupkg.sha512"
+    "C:\\Users\\Iqbal\\.nuget\\packages\\serilog\\4.4.0-dev-02437\\serilog.4.4.0-dev-02437.nupkg.sha512",
+    "C:\\Users\\Iqbal\\.nuget\\packages\\serilog.sinks.console\\6.1.1\\serilog.sinks.console.6.1.1.nupkg.sha512",
+    "C:\\Users\\Iqbal\\.nuget\\packages\\serilog.sinks.file\\8.0.0-nblumhardt-02322\\serilog.sinks.file.8.0.0-nblumhardt-02322.nupkg.sha512",
+    "C:\\Users\\Iqbal\\.nuget\\packages\\spectre.console\\0.54.0\\spectre.console.0.54.0.nupkg.sha512"
   ],
   "logs": []
 }

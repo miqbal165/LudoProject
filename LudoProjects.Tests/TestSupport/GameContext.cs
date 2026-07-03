@@ -13,7 +13,8 @@ public class GameContext
     public Dictionary<IPlayer, List<IPawn>> PlayerPawns { get; }
 
     public Cell[,] Cells { get; }
-
+    
+    // wadah untuk menyimpan semua object yang dibutuhkan oleh unit test.
     public GameContext(
         GameController controller,
         List<IPlayer> players,

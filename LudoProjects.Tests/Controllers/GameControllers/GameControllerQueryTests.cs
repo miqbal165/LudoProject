@@ -3,12 +3,11 @@ using LudoProjects.Interfaces;
 using LudoProjects.Models;
 using LudoProjects.Tests.Builders;
 using LudoProjects.Tests.TestSupport;
-using NUnit.Framework;
 
 namespace LudoProjects.Tests.Controllers.GameControllers;
 
 [TestFixture]
-public sealed class GameControllerQueryTests : GameControllerTestBase
+public class GameControllerQueryTests : GameControllerTestBase
 {
     [TestCase(Color.Red, 6, 1)]
     [TestCase(Color.Blue, 1, 8)]
@@ -19,7 +18,7 @@ public sealed class GameControllerQueryTests : GameControllerTestBase
         int expectedStartRow,
         int expectedStartColumn)
     {
-        GameContext context = new GameContextBuilder().Build();
+        GameContext context = Builder.Build();
         context.Controller.StartGame();
 
         IReadOnlyList<Position> path = context.Controller.GetFullPath(color);
@@ -40,7 +39,7 @@ public sealed class GameControllerQueryTests : GameControllerTestBase
     [Test]
     public void GetCellsByType_ReturnsExpectedBoardCellCounts()
     {
-        GameContext context = new GameContextBuilder().Build();
+        GameContext context = Builder.Build();
 
         using (Assert.EnterMultipleScope())
         {
@@ -58,7 +57,7 @@ public sealed class GameControllerQueryTests : GameControllerTestBase
     [Test]
     public void GetCell_WithValidPosition_ReturnsRequestedCell()
     {
-        GameContext context = new GameContextBuilder().Build();
+        GameContext context = Builder.Build();
         Position position = new(6, 1);
 
         ICell cell = context.Controller.GetCell(position);
@@ -74,7 +73,7 @@ public sealed class GameControllerQueryTests : GameControllerTestBase
     [Test]
     public void GetCell_WithPositionOutsideBoard_ThrowsArgumentOutOfRangeException()
     {
-        GameContext context = new GameContextBuilder().Build();
+        GameContext context = Builder.Build();
         Action getCell = () => context.Controller.GetCell(new Position(-1, 0));
 
         Assert.Throws<ArgumentOutOfRangeException>(getCell);
@@ -83,7 +82,7 @@ public sealed class GameControllerQueryTests : GameControllerTestBase
     [Test]
     public void GetPlayers_ReturnsAllPlayersInTurnOrder()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithPlayers(Color.Red, Color.Blue, Color.Green, Color.Yellow)
             .Build();
 

@@ -3,17 +3,16 @@ using LudoProjects.Interfaces;
 using LudoProjects.Models;
 using LudoProjects.Tests.Builders;
 using LudoProjects.Tests.TestSupport;
-using NUnit.Framework;
 
 namespace LudoProjects.Tests.Controllers.GameControllers;
 
 [TestFixture]
-public sealed class GameControllerCaptureAndBlockadeTests : GameControllerTestBase
+public class GameControllerCaptureAndBlockadeTests : GameControllerTestBase
 {
     [Test]
     public void MovePawn_WhenLandingOnOpponentInNormalCell_CapturesOpponent()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(2)
             .Build();
         context.Controller.StartGame();
@@ -45,7 +44,7 @@ public sealed class GameControllerCaptureAndBlockadeTests : GameControllerTestBa
     [Test]
     public void MovePawn_WhenLandingOnProtectedCell_DoesNotCaptureOpponent()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(1)
             .Build();
         context.Controller.StartGame();
@@ -85,9 +84,10 @@ public sealed class GameControllerCaptureAndBlockadeTests : GameControllerTestBa
     [Test]
     public void MovePawn_WhenOpponentBlockadeIsOnPath_DoesNotMovePawn()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(3)
             .Build();
+        
         context.Controller.StartGame();
         IPawn redPawn = context.PlayerPawns[context.Players[0]][0];
         List<IPawn> bluePawns = context.PlayerPawns[context.Players[1]];
@@ -113,7 +113,7 @@ public sealed class GameControllerCaptureAndBlockadeTests : GameControllerTestBa
     [Test]
     public void MovePawn_WhenDifferentOpponentColorsShareTarget_CapturesBoth()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithPlayers(Color.Red, Color.Blue, Color.Green)
             .WithDiceValues(2)
             .Build();

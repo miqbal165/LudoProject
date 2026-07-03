@@ -1,6 +1,6 @@
 namespace LudoProjects.Tests.TestDoubles;
 
-internal sealed class SequenceRandom : Random
+internal class SequenceRandom : Random
 {
     private readonly Queue<int> _values;
 

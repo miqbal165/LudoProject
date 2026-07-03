@@ -2,17 +2,16 @@ using LudoProjects.Enums;
 using LudoProjects.Models;
 using LudoProjects.Tests.Builders;
 using LudoProjects.Tests.TestSupport;
-using NUnit.Framework;
 
 namespace LudoProjects.Tests.Controllers.GameControllers;
 
 [TestFixture]
-public sealed class GameControllerStartGameTests : GameControllerTestBase
+public class GameControllerStartGameTests : GameControllerTestBase
 {
     [Test]
     public void StartGame_WithReadyBoard_StartsWithFirstPlayerAndBroadcastsState()
     {
-        GameContext context = new GameContextBuilder().Build();
+        GameContext context = Builder.Build();
         GameState? receivedState = null;
         context.Controller.OnStateChanged += state => receivedState = state;
 
@@ -34,7 +33,7 @@ public sealed class GameControllerStartGameTests : GameControllerTestBase
     [Test]
     public void StartGame_WithIncompleteBoard_RemainsWaitingToStart()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithIncompleteBoard()
             .Build();
 
@@ -52,12 +51,12 @@ public sealed class GameControllerStartGameTests : GameControllerTestBase
     [Test]
     public void StartGame_WhenAlreadyStarted_DoesNotResetGameState()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(6)
             .Build();
         context.Controller.StartGame();
         context.Controller.RollDice();
-        var stateBeforeSecondStart = context.Controller.GetGameState();
+        GameState stateBeforeSecondStart = context.Controller.GetGameState();
 
         context.Controller.StartGame();
 
@@ -80,7 +79,7 @@ public sealed class GameControllerStartGameTests : GameControllerTestBase
     [Test]
     public void StartGame_BuildsMovementPathsForEveryColor()
     {
-        GameContext context = new GameContextBuilder().Build();
+        GameContext context = Builder.Build();
 
         context.Controller.StartGame();
 

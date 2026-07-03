@@ -185,8 +185,7 @@ public sealed class GameController
         {
             List<IPawn> currentPawns = _playerPawns[GetCurrentPlayer()];
 
-            bool allPawnsInBase = currentPawns.All(
-                pawn => pawn.Status == PawnStatus.InBase);
+            bool allPawnsInBase = currentPawns.All(pawn => pawn.Status == PawnStatus.InBase);
 
             if (allPawnsInBase || movablePawns.Count == 1)
             {
@@ -201,9 +200,7 @@ public sealed class GameController
                     automaticPawn.Color,
                     movablePawns.Count);
 
-                MovePawnAlongPath(
-                    automaticPawn,
-                    rolledValue);
+                MovePawnAlongPath(automaticPawn, rolledValue);
 
                 CheckWinCondition();
 
@@ -293,8 +290,7 @@ public sealed class GameController
 
     public IReadOnlyList<IPawn> GetMovablePawns()
     {
-        if (_currentPhase != TurnPhase.SelectingPawn ||
-            _dice.CurrentValue is < 1 or > 6)
+        if (_currentPhase != TurnPhase.SelectingPawn)
         {
             return Array.Empty<IPawn>();
         }
@@ -362,53 +358,64 @@ public sealed class GameController
 
     public Position GetStartPosition(Color color)
     {
-        return color switch
+        Position startPosition = new Position(6, 1);
+
+        switch (color)
         {
-            Color.Red => new Position(6, 1),
-            Color.Blue => new Position(1, 8),
-            Color.Green => new Position(8, 13),
-            Color.Yellow => new Position(13, 6),
-            _ => default
-        };
+            case Color.Red: 
+                startPosition = new Position(6, 1);
+                break;
+            case Color.Blue: 
+                startPosition = new Position(1, 8);
+                break;
+            case Color.Green: 
+                startPosition = new Position(8, 13);
+                break;
+            case Color.Yellow:
+                startPosition = new Position(13, 6);
+                break;
+        }
+
+        return startPosition;
     }
 
     public IReadOnlyList<Position> GetBasePositions(Color color)
     {
-        Position[] positions = color switch
-        {
-            Color.Red =>
-            [
-                new Position(1, 1),
-                new Position(1, 4),
-                new Position(4, 1),
-                new Position(4, 4)
-            ],
+        Position[] positions = [
+            new Position(1, 1),
+            new Position(1, 4),
+            new Position(4, 1),
+            new Position(4, 4)
+        ];
+        
+        switch (color) {
 
-            Color.Blue =>
-            [
+            case Color.Blue:
+            positions = [
                 new Position(1, 10),
                 new Position(1, 13),
                 new Position(4, 10),
                 new Position(4, 13)
-            ],
+            ];
+            break;
 
-            Color.Green =>
-            [
+            case Color.Green:
+            positions = [
                 new Position(10, 10),
                 new Position(10, 13),
                 new Position(13, 10),
                 new Position(13, 13)
-            ],
+            ];
+            break;
 
-            Color.Yellow =>
-            [
+            case Color.Yellow:
+            positions = [
                 new Position(10, 1),
                 new Position(10, 4),
                 new Position(13, 1),
                 new Position(13, 4)
-            ],
-
-            _ => []
+            ];
+            break;
         };
 
         return Array.AsReadOnly(positions);
@@ -416,45 +423,48 @@ public sealed class GameController
 
     public IReadOnlyList<Position> GetHomeColumnPositions(Color color)
     {
-        Position[] positions = color switch
-        {
-            Color.Red =>
-            [
-                new Position(7, 1),
-                new Position(7, 2),
-                new Position(7, 3),
-                new Position(7, 4),
-                new Position(7, 5)
-            ],
 
-            Color.Blue =>
-            [
+        Position[] positions = [
+            new Position(7, 1),
+            new Position(7, 2),
+            new Position(7, 3),
+            new Position(7, 4),
+            new Position(7, 5)
+        ];
+
+
+
+        switch (color)
+        {
+            case Color.Blue:
+                positions = [
                 new Position(1, 7),
                 new Position(2, 7),
                 new Position(3, 7),
                 new Position(4, 7),
                 new Position(5, 7)
-            ],
+            ];
+            break;
 
-            Color.Green =>
-            [
+            case Color.Green:
+            positions = [
                 new Position(7, 13),
                 new Position(7, 12),
                 new Position(7, 11),
                 new Position(7, 10),
                 new Position(7, 9)
-            ],
+            ];
+            break;
 
-            Color.Yellow =>
-            [
+            case Color.Yellow:
+            positions = [
                 new Position(13, 7),
                 new Position(12, 7),
                 new Position(11, 7),
                 new Position(10, 7),
                 new Position(9, 7)
-            ],
-
-            _ => []
+            ];
+            break;
         };
 
         return Array.AsReadOnly(positions);

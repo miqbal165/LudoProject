@@ -4,13 +4,21 @@ using LudoProjects.Interfaces;
 using LudoProjects.Models;
 using LudoProjects.Tests.Builders;
 using LudoProjects.Tests.TestDoubles;
-using NUnit.Framework;
+using LudoProjects.Tests.TestSupport;
 
 namespace LudoProjects.Tests.Controllers.GameControllers;
 
 [TestFixture]
 public sealed class GameControllerConstructionTests
 {
+    private ValidConstructorInputs _validInputs = null!;
+
+    [SetUp]
+    public void SetUp()
+    {
+        _validInputs = CreateValidConstructorInputs();
+    }
+
     [TestCase(1)]
     [TestCase(5)]
     public void Constructor_WithInvalidPlayerCount_ThrowsArgumentException(
@@ -19,7 +27,7 @@ public sealed class GameControllerConstructionTests
         Color[] colors = Enumerable.Range(0, playerCount)
             .Select(index => (Color)(index % 4))
             .ToArray();
-        var inputs = CreateValidConstructorInputs(colors);
+        ValidConstructorInputs inputs = CreateValidConstructorInputs(colors);
 
         Action createController = () => _ = CreateController(inputs);
 
@@ -28,8 +36,8 @@ public sealed class GameControllerConstructionTests
 
     [Test]
     public void Constructor_WithDuplicatePlayerColors_ThrowsArgumentException()
-    {
-        var inputs = CreateValidConstructorInputs(
+    { 
+        ValidConstructorInputs inputs = CreateValidConstructorInputs(
             [Color.Red, Color.Red]);
 
         Action createController = () => _ = CreateController(inputs);
@@ -40,7 +48,7 @@ public sealed class GameControllerConstructionTests
     [Test]
     public void Constructor_WhenPawnCollectionIsMissing_ThrowsArgumentException()
     {
-        var inputs = CreateValidConstructorInputs();
+        ValidConstructorInputs inputs = _validInputs;
         inputs.PlayerPawns.Remove(inputs.Players[1]);
 
         Action createController = () => _ = CreateController(inputs);
@@ -51,7 +59,7 @@ public sealed class GameControllerConstructionTests
     [Test]
     public void Constructor_WithWrongPawnCount_ThrowsArgumentException()
     {
-        var inputs = CreateValidConstructorInputs();
+        ValidConstructorInputs inputs = _validInputs;
         inputs.PlayerPawns[inputs.Players[0]].RemoveAt(0);
 
         Action createController = () => _ = CreateController(inputs);
@@ -62,7 +70,7 @@ public sealed class GameControllerConstructionTests
     [Test]
     public void Constructor_WithPawnOfDifferentColor_ThrowsArgumentException()
     {
-        var inputs = CreateValidConstructorInputs();
+        ValidConstructorInputs inputs = _validInputs;
         inputs.PlayerPawns[inputs.Players[0]][0] =
             new Pawn(0, Color.Blue);
 
@@ -74,7 +82,7 @@ public sealed class GameControllerConstructionTests
     [Test]
     public void Constructor_WithDuplicatePawnIds_ThrowsArgumentException()
     {
-        var inputs = CreateValidConstructorInputs();
+        ValidConstructorInputs inputs = _validInputs;
         inputs.PlayerPawns[inputs.Players[0]][1] =
             new Pawn(0, Color.Red);
 
@@ -86,7 +94,7 @@ public sealed class GameControllerConstructionTests
     [Test]
     public void Constructor_WithInvalidBoardSize_ThrowsArgumentException()
     {
-        var inputs = CreateValidConstructorInputs(
+        ValidConstructorInputs inputs = CreateValidConstructorInputs(
             rows: 14,
             columns: 15);
 
@@ -95,14 +103,7 @@ public sealed class GameControllerConstructionTests
         Assert.Throws<ArgumentException>(createController);
     }
 
-    private static GameController CreateController(
-        (
-            List<IPlayer> Players,
-            Dictionary<IPlayer, List<IPawn>> PlayerPawns,
-            IBoard Board,
-            IDice Dice,
-            Random Random
-        ) inputs)
+    private static GameController CreateController(ValidConstructorInputs inputs)
     {
         return new GameController(
             inputs.Players,
@@ -113,13 +114,7 @@ public sealed class GameControllerConstructionTests
             inputs.Random);
     }
 
-    private static (
-        List<IPlayer> Players,
-        Dictionary<IPlayer, List<IPawn>> PlayerPawns,
-        IBoard Board,
-        IDice Dice,
-        Random Random
-    ) CreateValidConstructorInputs(
+    private static ValidConstructorInputs CreateValidConstructorInputs(
         Color[]? playerColors = null,
         int rows = 15,
         int columns = 15)
@@ -141,7 +136,7 @@ public sealed class GameControllerConstructionTests
             .AsIncompleteBoard()
             .Build();
 
-        return (
+        return new ValidConstructorInputs(
             players,
             playerPawns,
             new Board(cells),

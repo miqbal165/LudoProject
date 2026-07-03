@@ -3,17 +3,16 @@ using LudoProjects.Interfaces;
 using LudoProjects.Models;
 using LudoProjects.Tests.Builders;
 using LudoProjects.Tests.TestSupport;
-using NUnit.Framework;
 
 namespace LudoProjects.Tests.Controllers.GameControllers;
 
 [TestFixture]
-public sealed class GameControllerWinnerAndStateTests : GameControllerTestBase
+public class GameControllerWinnerAndStateTests : GameControllerTestBase
 {
     [Test]
     public void MoveLastPawnToCenter_SetsWinnerAndRaisesEvent()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(1)
             .Build();
         context.Controller.StartGame();
@@ -32,8 +31,11 @@ public sealed class GameControllerWinnerAndStateTests : GameControllerTestBase
             finishIndex - 1);
 
         IPlayer? winnerFromEvent = null;
-        context.Controller.OnPlayerWon += player => winnerFromEvent = player;
-
+        context.Controller.OnPlayerWon += player => 
+        {
+            winnerFromEvent = player;
+        };
+        
         context.Controller.RollDice();
 
         GameState state = context.Controller.GetGameState();
@@ -51,7 +53,7 @@ public sealed class GameControllerWinnerAndStateTests : GameControllerTestBase
     [Test]
     public void MovePawnToCenter_WhenOtherPawnsAreNotFinished_DoesNotEndGame()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(1)
             .Build();
         context.Controller.StartGame();
@@ -75,7 +77,7 @@ public sealed class GameControllerWinnerAndStateTests : GameControllerTestBase
     [Test]
     public void ValidGameActions_BroadcastUpdatedStates()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(1)
             .Build();
         List<GameState> states = [];
@@ -100,7 +102,7 @@ public sealed class GameControllerWinnerAndStateTests : GameControllerTestBase
     [Test]
     public void GetGameState_ReturnsCurrentGameInformation()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(6)
             .Build();
         context.Controller.StartGame();

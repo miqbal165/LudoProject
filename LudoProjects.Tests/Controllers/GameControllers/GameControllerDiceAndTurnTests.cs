@@ -1,19 +1,17 @@
 using LudoProjects.Enums;
 using LudoProjects.Interfaces;
 using LudoProjects.Models;
-using LudoProjects.Tests.Builders;
 using LudoProjects.Tests.TestSupport;
-using NUnit.Framework;
 
 namespace LudoProjects.Tests.Controllers.GameControllers;
 
 [TestFixture]
-public sealed class GameControllerDiceAndTurnTests : GameControllerTestBase
+public class GameControllerDiceAndTurnTests : GameControllerTestBase
 {
     [Test]
     public void RollDice_BeforeGameStarts_IsIgnored()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(6)
             .Build();
 
@@ -30,7 +28,7 @@ public sealed class GameControllerDiceAndTurnTests : GameControllerTestBase
     [Test]
     public void RollDice_WithNonSixAndNoMovablePawn_ChangesPlayer()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(3)
             .Build();
         context.Controller.StartGame();
@@ -49,7 +47,7 @@ public sealed class GameControllerDiceAndTurnTests : GameControllerTestBase
     [Test]
     public void RollDice_WithSixAndAllPawnsInBase_MovesFirstPawnAndGrantsExtraRoll()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(6)
             .Build();
         IPawn firstPawn = context.PlayerPawns[context.Players[0]][0];
@@ -71,7 +69,7 @@ public sealed class GameControllerDiceAndTurnTests : GameControllerTestBase
     [Test]
     public void RollDice_WithSixButNoMovablePawn_KeepsSamePlayerRolling()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(6)
             .Build();
         context.Controller.StartGame();
@@ -102,7 +100,7 @@ public sealed class GameControllerDiceAndTurnTests : GameControllerTestBase
     [Test]
     public void RollDice_WithOneMovablePawn_MovesItAutomaticallyAndChangesPlayer()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(2)
             .Build();
         context.Controller.StartGame();
@@ -123,7 +121,7 @@ public sealed class GameControllerDiceAndTurnTests : GameControllerTestBase
     [Test]
     public void RollDice_ThreeConsecutiveSixes_ForfeitsTurn()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(6, 6, 6)
             .Build();
         context.Controller.StartGame();
@@ -146,7 +144,7 @@ public sealed class GameControllerDiceAndTurnTests : GameControllerTestBase
     [Test]
     public void RollDice_WhileWaitingForPawnSelection_IsIgnored()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(1, 5)
             .Build();
         context.Controller.StartGame();
@@ -169,7 +167,7 @@ public sealed class GameControllerDiceAndTurnTests : GameControllerTestBase
     [Test]
     public void NextTurn_SkipsPlayerWhoHasFinished()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithPlayers(Color.Red, Color.Blue, Color.Green)
             .WithDiceValues(2)
             .Build();

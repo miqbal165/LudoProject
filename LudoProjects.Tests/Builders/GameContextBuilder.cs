@@ -64,7 +64,7 @@ internal class GameContextBuilder
         IDice dice = new Dice();
         Random random = new SequenceRandom(_diceValues);
 
-        var controller = new GameController(
+        GameController controller = new (
             players,
             playerPawns,
             new Dictionary<Color, IReadOnlyList<Position>>(),

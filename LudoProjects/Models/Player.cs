@@ -15,6 +15,4 @@ public sealed class Player : IPlayer
         Color = color;
         IsFinished = false;
     }
-
-    public override string ToString() => $"{Name} ({Color})";
 }

@@ -3,17 +3,16 @@ using LudoProjects.Interfaces;
 using LudoProjects.Models;
 using LudoProjects.Tests.Builders;
 using LudoProjects.Tests.TestSupport;
-using NUnit.Framework;
 
 namespace LudoProjects.Tests.Controllers.GameControllers;
 
 [TestFixture]
-public sealed class GameControllerPawnSelectionTests : GameControllerTestBase
+public class GameControllerPawnSelectionTests : GameControllerTestBase
 {
     [Test]
     public void RollDice_WithMultipleMovablePawns_WaitsForPlayerSelection()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(1)
             .Build();
         context.Controller.StartGame();
@@ -36,7 +35,7 @@ public sealed class GameControllerPawnSelectionTests : GameControllerTestBase
     [Test]
     public void SelectPawn_WithValidId_MovesSelectedPawnAndChangesPlayer()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(1)
             .Build();
         context.Controller.StartGame();
@@ -60,7 +59,7 @@ public sealed class GameControllerPawnSelectionTests : GameControllerTestBase
     [Test]
     public void SelectPawn_WithInvalidId_DoesNotMoveAnyPawn()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(1)
             .Build();
         context.Controller.StartGame();
@@ -84,7 +83,7 @@ public sealed class GameControllerPawnSelectionTests : GameControllerTestBase
     [Test]
     public void SelectPawn_OutsideSelectionPhase_IsIgnored()
     {
-        GameContext context = new GameContextBuilder().Build();
+        GameContext context = Builder.Build();
         IPawn pawn = context.PlayerPawns[context.Players[0]][0];
 
         context.Controller.SelectPawn(pawn.Id);
@@ -102,7 +101,7 @@ public sealed class GameControllerPawnSelectionTests : GameControllerTestBase
     [Test]
     public void SelectPawn_AfterRollingSix_GrantsExtraRollToSamePlayer()
     {
-        GameContext context = new GameContextBuilder()
+        GameContext context = Builder
             .WithDiceValues(6)
             .Build();
         context.Controller.StartGame();

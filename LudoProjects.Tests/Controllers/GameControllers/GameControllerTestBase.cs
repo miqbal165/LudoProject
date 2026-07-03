@@ -1,12 +1,21 @@
 using LudoProjects.Enums;
 using LudoProjects.Interfaces;
 using LudoProjects.Models;
+using LudoProjects.Tests.Builders;
 using LudoProjects.Tests.TestSupport;
 
 namespace LudoProjects.Tests.Controllers.GameControllers;
 
 public abstract class GameControllerTestBase
 {
+    private protected GameContextBuilder Builder { get; private set; } = null!;
+
+    [SetUp]
+    public void SetUp()
+    {
+        Builder = new GameContextBuilder();
+    }
+
     protected static void PlacePawn(
         GameContext context,
         IPawn pawn,
