@@ -39,6 +39,7 @@ public class GameControllerPawnSelectionTests : GameControllerTestBase
             .WithDiceValues(1)
             .Build();
         context.Controller.StartGame();
+        
         List<IPawn> pawns = context.PlayerPawns[context.Players[0]];
         PlacePawn(context, pawns[0], PawnStatus.OnBoard, 0);
         PlacePawn(context, pawns[1], PawnStatus.OnBoard, 2);
@@ -64,8 +65,10 @@ public class GameControllerPawnSelectionTests : GameControllerTestBase
             .Build();
         context.Controller.StartGame();
         List<IPawn> pawns = context.PlayerPawns[context.Players[0]];
+        
         PlacePawn(context, pawns[0], PawnStatus.OnBoard, 0);
         PlacePawn(context, pawns[1], PawnStatus.OnBoard, 2);
+        
         context.Controller.RollDice();
 
         context.Controller.SelectPawn(99);

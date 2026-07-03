@@ -16,6 +16,7 @@ public class GameControllerMovementTests : GameControllerTestBase
             .WithDiceValues(1)
             .Build();
         context.Controller.StartGame();
+        
         IPawn pawn = context.PlayerPawns[context.Players[0]][0];
         PlacePawn(context, pawn, PawnStatus.OnBoard, 50);
 
