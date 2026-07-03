@@ -515,8 +515,7 @@ public sealed class GameController
 
     private IEnumerable<Position> GetClockwiseOuterTrack(Position startFrom)
     {
-        List<Position> outerTrack =
-        [
+        List<Position> outerTrack = [
             new(6, 1), new(6, 2), new(6, 3), new(6, 4), new(6, 5),
             new(5, 6), new(4, 6), new(3, 6), new(2, 6), new(1, 6), new(0, 6),
             new(0, 7),
@@ -573,8 +572,7 @@ public sealed class GameController
     {
         IPlayer currentPlayer = GetCurrentPlayer();
 
-        if (_playerPawns[currentPlayer]
-            .Any(pawn => pawn.Status != PawnStatus.Finished))
+        if (_playerPawns[currentPlayer].Any(pawn => pawn.Status != PawnStatus.Finished))
         {
             return;
         }
